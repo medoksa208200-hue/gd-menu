@@ -7,3 +7,4 @@ dist-pages/
 .DS_Store
 .supabase/
 supabase/.temp/
+.sites-runtime/
