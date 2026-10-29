@@ -1,13 +1,42 @@
 {
   "name": "gd-menu",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
-  "description": "GD TABLEWARE INDUSTRY — Supabase database foundation",
-  "scripts": {
-    "test": "node --test scripts/schema.test.mjs",
-    "db:reset": "supabase db reset",
-    "db:push": "supabase db push",
-    "db:types": "supabase gen types typescript --local > database.types.ts"
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
   },
-  "devDependencies": {"@electric-sql/pglite": "0.5.13"}
+  "packageManager": "pnpm@11.25.0",
+  "scripts": {
+    "dev": "vite --config vite.pages.config.ts --host 0.0.0.0 --port 4173",
+    "build": "vite build --config vite.pages.config.ts",
+    "preview": "vite preview --config vite.pages.config.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test scripts/schema.test.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.104.0",
+    "@hookform/resolvers": "5.7.1",
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "react-hook-form": "7.85.0",
+    "zod": "3.25.76",
+    "lucide-react": "1.31.0",
+    "recharts": "3.8.0",
+    "sonner": "2.0.8",
+    "exceljs": "4.4.0",
+    "qrcode": "1.5.4"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.19",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@types/qrcode": "1.5.6",
+    "@vitejs/plugin-react": "6.0.2",
+    "@tailwindcss/vite": "4.2.1",
+    "typescript": "5.9.3",
+    "vite": "8.0.13",
+    "tailwindcss": "4.2.1",
+    "@electric-sql/pglite": "0.3.14"
+  }
 }

@@ -194,3 +194,39 @@ test('storage paths enforce module permissions and attachment ownership',async()
   await denied("insert into storage.objects(bucket_id,name) values('factory-files','molds/not-a-uuid/invalid.pdf')");
   assert.equal((await sql("update storage.objects set name='tampered.pdf' returning id")).length,0);
 });
+
+test('transactional mold bundle saves specifications and rolls back invalid related rows',async()=>{
+ await as('authenticated',staff);
+ const payload={code:'BUNDLE-TEST',name_ar:'اختبار معاملة',name_en:'Bundle test',publication_status:'draft',diameter_mm:260,operational_status:'maintenance',category_ids:[cat],color_ids:[]};
+ const id=(await sql('select public.save_mold_bundle(null,$1::jsonb) id',[JSON.stringify(payload)]))[0].id;
+ assert.equal(Number((await sql('select diameter_mm from public.mold_specifications where mold_id=$1',[id]))[0].diameter_mm),260);
+ assert.equal((await sql('select operational_status from public.mold_internal_details where mold_id=$1',[id]))[0].operational_status,'maintenance');
+ await denied('select public.save_mold_bundle(null,$1::jsonb)',[JSON.stringify({...payload,code:'ROLLBACK-TEST',category_ids:[crypto.randomUUID()]})]);
+ assert.equal((await sql("select id from public.molds where code='ROLLBACK-TEST'")).length,0);
+});
+test('username management and owner setup remain server-only',async()=>{
+ await as('authenticated',outsider);
+ assert.deepEqual((await sql('select public.get_my_access() a'))[0].a,{});
+ await denied("select public.provision_staff_account($1,'Attack','attacker','admin')",[outsider]);
+ await denied("select public.valid_owner_setup('fake')");
+ await denied("select public.initialize_owner('fake',$1,'Attack','attacker')",[outsider]);
+ await as('service_role');
+ assert.equal((await sql("select public.valid_owner_setup('fake') valid"))[0].valid,false);
+});
+test('anonymous Storage reads include only approved published public objects',async()=>{
+ await as('authenticated',staff);
+ await sql("insert into storage.objects(bucket_id,name) values('catalog-media','molds/'||$1::uuid::text||'/approved.jpg')",[mold]);
+ await as('anon');
+ const rows=await sql('select name from storage.objects');
+ assert.equal(rows.length,1);assert.ok(rows[0].name.endsWith('/approved.jpg'));
+ await denied('select * from private.analytics_rate');
+ await denied("select public.ingest_catalog_event(repeat('a',64),'view',$1,null)",[mold]);
+});
+test('real analytics ingestion is service-only, validates publication and deduplicates daily views',async()=>{
+ await as('service_role');
+ const visitor='a'.repeat(64);
+ await sql("select public.ingest_catalog_event($1,'view',$2,null)",[visitor,mold]);
+ await sql("select public.ingest_catalog_event($1,'view',$2,null)",[visitor,mold]);
+ assert.equal(Number((await sql('select count(*) n from public.mold_views where mold_id=$1 and session_hash=$2',[mold,visitor]))[0].n),1);
+ assert.equal((await sql("select public.ingest_catalog_event($1,'view',$2,null) accepted",[visitor,draft]))[0].accepted,false);
+});

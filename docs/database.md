@@ -78,6 +78,12 @@ not secret payloads or full before/after snapshots. Audit writes are automatic.
 
 ## Storage and public media delivery
 
+Current application note: an additional SELECT policy permits anonymous access
+only to catalog-media objects whose exact path is present in an approved public
+projection. The browser requests a 60-second signed URL under this policy. The
+bucket remains private; guessed draft/private paths remain denied.
+
+
 Both `catalog-media` and `factory-files` are private buckets. An approved public
 metadata row does not turn its raw Storage URL into a public URL.
 

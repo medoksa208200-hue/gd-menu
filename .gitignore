@@ -1,11 +1,9 @@
+node_modules/
+dist-pages/
 .env
 .env.*
 !.env.example
-node_modules/
-.next/
-dist/
-coverage/
-supabase/.temp/
-supabase/.branches/
 *.log
 .DS_Store
+.supabase/
+supabase/.temp/
