@@ -8,3 +8,17 @@
 .document-row{display:flex;align-items:center;gap:15px;padding:14px 0;border-bottom:1px solid #eceef2;font-size:12px}.document-row>div{flex:1}.document-row small{margin-top:4px}.document-row+.inline-invite{margin-top:20px}
 .activity-row{display:flex;align-items:center;gap:12px;border-bottom:1px solid #f1f2f4;padding:13px 0}.activity-row>i{width:7px;height:7px;background:#ed0715;border-radius:50%}.activity-row strong{font-size:11px}.activity-row small{font-size:9px;margin-top:4px}
 .password-requirements{list-style:none;padding:4px 0 0;margin:5px 0 0;display:grid;gap:6px;font-size:11px;font-weight:400;line-height:1.8}.password-requirements li{display:flex;align-items:center;gap:8px}.password-requirements .pending{color:#858d99}.password-requirements .passed{color:#16844a}.password-requirements svg{flex-shrink:0}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}.button.red:disabled{background:#bd7e84;color:#fff;opacity:1}
+
+.admin-sidebar-backdrop,.admin-sidebar-close{display:none}
+@media(max-width:760px){
+ .admin-sidebar-backdrop{display:block;position:fixed;inset:0;width:100%;height:100%;padding:0;border:0;border-radius:0;background:#171c2780;z-index:39;cursor:pointer;touch-action:none}
+ .admin-sidebar{visibility:hidden;pointer-events:none;transition:transform .2s,visibility .2s;overscroll-behavior:contain}
+ .admin-sidebar.visible{visibility:visible;pointer-events:auto}
+ .admin-sidebar-close{display:inline-flex;align-items:center;justify-content:center;position:absolute;top:12px;inset-inline-end:10px;width:44px;height:44px;z-index:1;border-radius:5px;color:#616977}
+ .admin-sidebar-close:hover{background:#fff0f1;color:#e00818}
+ .admin-sidebar-close:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+ .admin-sidebar .admin-brand{padding-top:58px}
+ .admin-topbar .mobile-menu{min-width:44px;min-height:44px;align-items:center;justify-content:center}
+}
+@media(prefers-reduced-motion:reduce){.admin-sidebar{transition:none}}
+@media print{.admin-sidebar-backdrop,.admin-sidebar-close{display:none!important}}
