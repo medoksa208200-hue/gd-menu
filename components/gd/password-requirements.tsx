@@ -4,8 +4,8 @@ import {passwordChecks,type PasswordCheckKey} from '@/supabase/functions/_shared
 import {useUI} from './platform';
 const labels:[PasswordCheckKey,string,string][]=[
  ['length','8 أحرف على الأقل (بحد أقصى 128)','8–128 characters'],
- ['uppercase','حرف كابتال واحد على الأقل (A–Z)','At least one uppercase letter (A–Z)'],
- ['lowercase','حرف سمول واحد على الأقل (a–z)','At least one lowercase letter (a–z)'],
+ ['uppercase','حرف إنجليزي كبير واحد على الأقل (A–Z)','At least one uppercase letter (A–Z)'],
+ ['lowercase','حرف إنجليزي صغير واحد على الأقل (a–z)','At least one lowercase letter (a–z)'],
  ['number','رقم واحد على الأقل (0–9)','At least one number (0–9)'],
  ['special','رمز خاص مثل ! @ # $','A special character such as ! @ # $'],
 ];
