@@ -89,7 +89,7 @@ Functions use Supabase's injected `SUPABASE_SECRET_KEYS` and
 gd-owner verifies the one-time setup secret; gd-events is public, rate-limited
 analytics. No function treats the absence of a gateway JWT check as authorization.
 
-The internal Auth identity uses a synthetic `username@staff.gd.invalid` identifier.
+The internal Auth identity uses a synthetic `username@<Supabase project hostname>` identifier.
 It is created confirmed by the trusted backend, never mailed, and never requested
 from the user. Users interact exclusively with username/password fields.
 

@@ -9,7 +9,7 @@ After setup, sign in at /admin/login. The Super Admin creates other users under
 or email confirmation is used. Forgotten passwords are reset by the Super Admin.
 
 Usernames use 3–40 lowercase letters/digits/dot/dash/underscore. Passwords must be
-12–128 characters. Neither password values nor setup secrets belong in source
+8–128 characters with uppercase, lowercase, a number and a special character. Neither password values nor setup secrets belong in source
 control, logs, spreadsheets or screenshots.
 
 Storage remains private. Public media downloads are allowed only for paths with

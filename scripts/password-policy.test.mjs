@@ -1,0 +1,16 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {passwordChecks,validPassword} from '../supabase/functions/_shared/password-policy.mjs';
+test('eight characters with all required character classes pass',()=>assert.equal(validPassword('Abcdef1!'),true));
+test('seven characters fail even with all character classes',()=>assert.equal(validPassword('Abcd1!x'),false));
+test('each missing character class is independently rejected',()=>{for(const password of ['abcdef1!','ABCDEF1!','Abcdefg!','Abcdef12'])assert.equal(validPassword(password),false)});
+test('requirements report each fulfilled condition independently',()=>assert.deepEqual(passwordChecks('Ab1!'),{length:false,uppercase:true,lowercase:true,number:true,special:true}));
+test('whitespace and non-Latin letters are not special symbols',()=>{assert.equal(validPassword('Abcdef1 '),false);assert.equal(validPassword('Abcdef1ش'),false)});
+test('maxlength is enforced and empty/non-string values fail',()=>{assert.equal(validPassword('Ab1!'+ 'x'.repeat(125)),false);assert.equal(validPassword('Ab1!'+ 'x'.repeat(124)),true);assert.equal(validPassword(null),false);assert.equal(validPassword(''),false)});
+import {staffIdentity} from '../supabase/functions/_shared/staff-identity.mjs';
+test('staff identifiers use the real project hostname instead of a reserved test domain',()=>assert.equal(staffIdentity('admin','https://project-ref.supabase.co'),'admin@project-ref.supabase.co'));
+test('owner creation and sign in normalize usernames identically',()=>assert.equal(staffIdentity(' Admin ','https://project-ref.supabase.co'),'admin@project-ref.supabase.co'));
+test('invalid usernames and reserved project domains are rejected',()=>{assert.throws(()=>staffIdentity('bad name','https://project-ref.supabase.co'));assert.throws(()=>staffIdentity('admin','https://staff.gd.invalid'))});
+import {edgeErrorMessage} from '../lib/edge-errors.mjs';
+test('Edge Function errors display the actual server validation message',async()=>{const r=new Response(JSON.stringify({error:'كود التهيئة غير صحيح',code:'invalid_setup_code'}),{status:403,headers:{'Content-Type':'application/json'}});assert.equal(await edgeErrorMessage({context:r,message:'Edge Function returned a non-2xx status code'}),'كود التهيئة غير صحيح');assert.equal(r.bodyUsed,false)});
+test('non-JSON server errors fall back without throwing a parse exception',async()=>assert.equal(await edgeErrorMessage({context:new Response('<html>Error</html>',{status:502}),message:'Service unavailable'}),'Service unavailable'));
