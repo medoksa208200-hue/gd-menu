@@ -73,7 +73,7 @@ until the factory adds and publishes its actual products.
 
 ## Supabase deployment
 
-The eight timestamped migrations in `supabase/migrations` were applied in order to
+The timestamped migrations in `supabase/migrations` are applied in order to
 the selected `gd menu` project. Reference colors and company settings are seeded.
 Functions in `supabase/functions` are deployed separately on Supabase:
 
@@ -92,6 +92,23 @@ analytics. No function treats the absence of a gateway JWT check as authorizatio
 The internal Auth identity uses a synthetic `username@<Supabase project hostname>` identifier.
 It is created confirmed by the trusted backend, never mailed, and never requested
 from the user. Users interact exclusively with username/password fields.
+
+## Performance, caching and hardening
+
+- Public visitors download only the catalog bundle (~140 KB gzip). The staff workspace, charts,
+  Excel and QR code libraries are separate chunks loaded on demand; vendor chunks keep stable hashes.
+- `public/_headers` sets a strict Content-Security-Policy, HSTS and isolation headers, caches hashed
+  `/assets/*` for a year (immutable) and brand/editorial images for 30 days. HTML is revalidated.
+- Catalog images are fetched per grid in one query, signed in one batched request and reused from an
+  in-memory cache (1 hour public, 5 minutes private) so the browser HTTP cache is effective. Uploads
+  are stored with a one-year Cache-Control because object names are random and immutable.
+- Catalog search is debounced; search and view analytics are sent once per settled query / page load.
+- Edge Functions share `_shared/http.mjs`: 16 KiB JSON body limit, cached CORS preflight, proxy-set
+  client IP for rate limiting. Set the `ALLOWED_ORIGINS` function secret (comma-separated site
+  origins) to restrict browser callers; without it all origins are accepted.
+- Database: covering FK indexes, RLS helpers evaluated once per statement, literal (escaped) LIKE
+  search, one-call lifecycle report, 180-day retention for raw search text, and no implicit API-role
+  privileges on future objects. Public catalog projections are SELECT-only.
 
 ## Verification and limits
 

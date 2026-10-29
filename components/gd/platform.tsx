@@ -1,8 +1,9 @@
 'use client';
-import React,{createContext,useContext,useEffect,useState} from 'react';
+import React,{createContext,lazy,Suspense,useContext,useEffect,useState} from 'react';
 import {initClients,message,Row} from '@/lib/gd';
 import PublicSite from './public-site';
-import Admin from './admin';
+// The staff workspace (charts, Excel, QR, forms) is a separate chunk that public visitors never download.
+const Admin=lazy(()=>import('./admin'));
 import {Toaster,toast} from 'sonner';
 export const UI=createContext<any>(null);
 export const useUI=()=>useContext(UI);
@@ -14,5 +15,5 @@ export default function Platform(){
  const toggleCompare=(id:string)=>setComparison(old=>{if(!old.includes(id)&&old.length>=4){toast.error(lang==='ar'?'يمكن مقارنة 4 تصميمات فقط':'Compare up to four designs');return old}const next=old.includes(id)?old.filter(i=>i!==id):[...old,id];localStorage.setItem('gd-compare',JSON.stringify(next));return next});
  const t=(ar:string,en:string)=>lang==='ar'?ar:en;
  const Link=({href,children,...props}:any)=><a href={href} {...props} onClick={(e:any)=>{if(!e.ctrlKey&&!e.metaKey){e.preventDefault();go(href)}}}>{children}</a>;
- return <UI.Provider value={{lang,setLang,path,go,t,Link,comparison,toggleCompare}}><Toaster richColors position="top-center"/>{error?<main className="center-state"><h1>{t('تعذّر الاتصال','Connection unavailable')}</h1><p>{message(error,lang==='en'?'en':'ar')}</p><button onClick={()=>location.reload()}>{t('إعادة المحاولة','Try again')}</button></main>:!ready?<div className="center-state"><img width="100" src="/brand/gd-original.jpg" alt={t('جي دي','GD')}/><span className="spinner"/></div>:path.startsWith('/admin')?<Admin/>:<PublicSite/>}</UI.Provider>
+ return <UI.Provider value={{lang,setLang,path,go,t,Link,comparison,toggleCompare}}><Toaster richColors position="top-center"/>{error?<main className="center-state"><h1>{t('تعذّر الاتصال','Connection unavailable')}</h1><p>{message(error,lang==='en'?'en':'ar')}</p><button onClick={()=>location.reload()}>{t('إعادة المحاولة','Try again')}</button></main>:!ready?<div className="center-state"><img width="100" height="99" src="/brand/gd-logo.webp" alt={t('جي دي','GD')}/><span className="spinner"/></div>:path.startsWith('/admin')?<Suspense fallback={<div className="center-state"><span className="spinner"/></div>}><Admin/></Suspense>:<PublicSite/>}</UI.Provider>
 }

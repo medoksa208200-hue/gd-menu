@@ -1,11 +1,13 @@
 import {staffIdentity} from '../_shared/staff-identity.mjs';
 import {validPassword} from '../_shared/password-policy.mjs';
+import {responseHeaders,originAllowed,readJson,clientAddress} from '../_shared/http.mjs';
 import {createClient} from 'npm:@supabase/supabase-js@2.104.0';
-const headers={'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'authorization, x-client-info, apikey, content-type','Content-Type':'application/json'};
 Deno.serve(async(req:Request)=>{
+ const headers=responseHeaders(req);
  if(req.method==='OPTIONS')return new Response(null,{headers});
  const reply=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers});
  if(req.method!=='POST')return reply({error:'Method not allowed'},405);
+ if(!originAllowed(req))return reply({error:'Origin not allowed'},403);
  try{
  const auth=req.headers.get('authorization');if(!auth?.startsWith('Bearer '))return reply({error:'Authentication required'},401);
  const url=Deno.env.get('SUPABASE_URL')!;
@@ -15,7 +17,7 @@ Deno.serve(async(req:Request)=>{
  const {data:{user},error}=await server.auth.getUser(auth.slice(7));if(error||!user)return reply({error:'Invalid session'},401);
  const scoped=createClient(url,publicKey,{global:{headers:{Authorization:auth}},auth:{persistSession:false}});
  const access=await scoped.rpc('get_my_access');if(access.error||!access.data?.active||!access.data?.is_super_admin)return reply({error:'Super Admin required'},403);
- const body=await req.json();
+ const body=await readJson(req);
  if(body.action==='reset_password'){
   if(typeof body.user_id!=='string'||!validPassword(body.password))return reply({error:'Password must contain 8–128 characters, uppercase, lowercase, a number and a special character'},400);
   const profile=await server.from('profiles').select('id').eq('id',body.user_id).maybeSingle();if(!profile.data)return reply({error:'Staff account not found'},404);
