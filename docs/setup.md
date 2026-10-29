@@ -2,9 +2,10 @@
 
 ## Current status
 
-Migrations and tests are prepared locally. Hosted application features and live
-Supabase integration are not yet deployed or verified. Never execute the test
-platform fixture against a real Supabase project.
+The four schema migrations are applied to the selected `gd menu` project.
+The live PostgreSQL smoke test passed and rolled back all test data. Hosted
+application features, HTTP APIs, Auth emails and Storage byte validation are
+not implemented or verified. Never execute platform-fixture.sql on Supabase.
 
 ## Local Supabase
 

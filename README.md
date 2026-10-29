@@ -4,8 +4,9 @@
 
 **Current delivery: database foundation only.** The Next.js application, login UI,
 invitation/reset handlers, file-processing endpoints, imports/exports, PDFs, QR
-printing and live deployment are not implemented yet. No live Supabase migration
-has been applied by this repository's initial delivery.
+printing and live deployment are not implemented yet. The four migrations were applied to the selected `gd menu` Supabase project
+on 2026-10-29; a transactional live database smoke test passed. See
+`docs/verification.md` for the actual checks, advisor notices and remaining limits.
 
 ## What is included
 
@@ -25,10 +26,10 @@ has been applied by this repository's initial delivery.
 
 | Path | Purpose |
 | --- | --- |
-| `supabase/migrations/20261029000100_core.sql` | Entities, relations, types, constraints, indexes |
-| `supabase/migrations/20261029000200_security.sql` | Roles, RLS, guarded mutations, access RPCs, auditing |
-| `supabase/migrations/20261029000300_catalog_and_reports.sql` | Public allowlist views, search/collections, private reports |
-| `supabase/migrations/20261029000400_storage.sql` | Private buckets, file-path policies, event attachment validation |
+| `supabase/migrations/20261029123841_core.sql` | Entities, relations, types, constraints, indexes |
+| `supabase/migrations/20261029124045_security.sql` | Roles, RLS, guarded mutations, access RPCs, auditing |
+| `supabase/migrations/20261029124113_catalog_and_reports.sql` | Public allowlist views, search/collections, private reports |
+| `supabase/migrations/20261029124124_storage.sql` | Private buckets, file-path policies, event attachment validation |
 | `supabase/seed.sql` | Company name and three reference colors; no fictitious sales |
 | `supabase/tests/platform-fixture.sql` | Test-only Auth/Storage approximation; never run on Supabase |
 | `scripts/schema.test.mjs` | Executable PostgreSQL schema/authorization tests |

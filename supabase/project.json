@@ -1,0 +1,22 @@
+{
+  "project_ref": "uaozbculriwhfilzklyr",
+  "project_name": "gd menu",
+  "migration_versions": [
+    {
+      "version": "20261029123841",
+      "name": "core"
+    },
+    {
+      "version": "20261029124045",
+      "name": "security"
+    },
+    {
+      "version": "20261029124113",
+      "name": "catalog_and_reports"
+    },
+    {
+      "version": "20261029124124",
+      "name": "storage"
+    }
+  ]
+}
