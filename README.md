@@ -25,10 +25,10 @@ has been applied by this repository's initial delivery.
 
 | Path | Purpose |
 | --- | --- |
-| `supabase/migrations/202610290001_core.sql` | Entities, relations, types, constraints, indexes |
-| `supabase/migrations/202610290002_security.sql` | Roles, RLS, guarded mutations, access RPCs, auditing |
-| `supabase/migrations/202610290003_catalog_and_reports.sql` | Public allowlist views, search/collections, private reports |
-| `supabase/migrations/202610290004_storage.sql` | Private buckets, file-path policies, event attachment validation |
+| `supabase/migrations/20261029000100_core.sql` | Entities, relations, types, constraints, indexes |
+| `supabase/migrations/20261029000200_security.sql` | Roles, RLS, guarded mutations, access RPCs, auditing |
+| `supabase/migrations/20261029000300_catalog_and_reports.sql` | Public allowlist views, search/collections, private reports |
+| `supabase/migrations/20261029000400_storage.sql` | Private buckets, file-path policies, event attachment validation |
 | `supabase/seed.sql` | Company name and three reference colors; no fictitious sales |
 | `supabase/tests/platform-fixture.sql` | Test-only Auth/Storage approximation; never run on Supabase |
 | `scripts/schema.test.mjs` | Executable PostgreSQL schema/authorization tests |

@@ -1,0 +1,13 @@
+{
+  "name": "gd-menu",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GD TABLEWARE INDUSTRY — Supabase database foundation",
+  "scripts": {
+    "test": "node --test scripts/schema.test.mjs",
+    "db:reset": "supabase db reset",
+    "db:push": "supabase db push",
+    "db:types": "supabase gen types typescript --local > database.types.ts"
+  },
+  "devDependencies": {"@electric-sql/pglite": "0.5.13"}
+}

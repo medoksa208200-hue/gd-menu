@@ -1,0 +1,19 @@
+name: Database schema tests
+on:
+  push:
+    paths: ['supabase/**', 'scripts/**', 'package*.json', '.github/workflows/database.yml']
+  pull_request:
+    paths: ['supabase/**', 'scripts/**', 'package*.json', '.github/workflows/database.yml']
+permissions:
+  contents: read
+jobs:
+  schema:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm test
