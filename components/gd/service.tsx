@@ -1,0 +1,39 @@
+'use client';
+import React,{useEffect,useState} from 'react';
+import {Search,Wrench,Sparkles,Layers3,History} from 'lucide-react';
+import {toast} from 'sonner';
+import {db,unwrap,Row,message} from '@/lib/gd';
+import {formatDate} from '@/lib/i18n';
+import {useUI} from './platform';
+import {Empty,Media} from './public-site';
+import {PageHead,Modal} from './ui';
+export type ServiceKind='maintenance'|'chrome';
+const table={maintenance:'maintenance_records',chrome:'chrome_records'} as const;
+const dateField={maintenance:'maintenance_date',chrome:'chrome_date'} as const;
+const today=()=>new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
+export const daysSince=(date?:string)=>date?Math.max(0,Math.round((Date.parse(today())-Date.parse(date))/86400000)):null;
+// Latest date per mold from completed records; records are append-only, so "last" is the newest entry.
+export async function lastDates(kind:ServiceKind,moldIds?:string[]){let q=db().from(table[kind]).select(`mold_id,${dateField[kind]}`).eq('status','completed').order(dateField[kind],{ascending:false}).limit(10000);if(moldIds)q=q.in('mold_id',moldIds);const rows=unwrap(await q) as Row[];const out:Record<string,string>={};for(const r of rows)out[r.mold_id]??=r[dateField[kind]];return out}
+export function ServiceDate({date}:{date?:string}){const {t,lang}=useUI();const d=daysSince(date);if(!date)return <span className="muted">{t('لم يُسجَّل','Not recorded')}</span>;return <span className="service-date"><b>{formatDate(date,lang)}</b><small>{d===0?t('اليوم','today'):t(`منذ ${d} يوم`,`${d} days ago`)}</small></span>}
+// One-step logging: a date (today by default) and an optional note. Saved as a completed record.
+export function LogService({mold,kind,onClose,onSaved}:{mold:Row,kind:ServiceKind,onClose:()=>void,onSaved:()=>void}){const {t,lang}=useUI();const [date,setDate]=useState(today()),[note,setNote]=useState(''),[busy,setBusy]=useState(false);const label=kind==='maintenance'?t('صيانة','Maintenance'):t('كروم','Chrome plating');
+ return <Modal title={(kind==='maintenance'?t('تسجيل صيانة','Log maintenance'):t('تسجيل كروم','Log chrome plating'))+' — '+mold.code} onClose={onClose}><form className="form-grid one" onSubmit={async e=>{e.preventDefault();setBusy(true);try{const record:Row=kind==='maintenance'?{mold_id:mold.id,maintenance_date:date,maintenance_type:t('صيانة','Maintenance'),status:'completed',notes:note.trim()||null}:{mold_id:mold.id,chrome_date:date,chrome_type:t('كروم','Chrome plating'),status:'completed',notes:note.trim()||null};unwrap(await db().from(table[kind]).insert(record));toast.success(t(`تم تسجيل ${label} بتاريخ ${formatDate(date,lang)}`,`${label} logged for ${formatDate(date,lang)}`));onSaved()}catch(e){toast.error(message(e))}finally{setBusy(false)}}}>
+  <p className="muted">{mold['name_'+lang]}</p>
+  <label className="field">{kind==='maintenance'?t('تاريخ الصيانة','Maintenance date'):t('تاريخ الكروم','Chrome date')}<input type="date" required max={today()} value={date} onChange={e=>setDate(e.target.value)}/></label>
+  <label className="field">{t('ملاحظة (اختياري)','Note (optional)')}<textarea rows={2} value={note} onChange={e=>setNote(e.target.value)} placeholder={kind==='maintenance'?t('مثال: تلميع وتغيير سوست','e.g. polished, springs replaced'):t('مثال: كروم كامل','e.g. full chrome')}/></label>
+  <p className="hint">{t('السجل يُحفظ كما هو ولا يمكن تعديله بعد الحفظ.','Records are kept as-is and can’t be edited after saving.')}</p>
+  <div className="modal-foot"><button type="button" className="btn btn-ghost" onClick={onClose}>{t('إلغاء','Cancel')}</button><button className="btn btn-red" disabled={busy}>{busy?<span className="spinner small light"/>:t('حفظ','Save')}</button></div></form></Modal>}
+
+export default function ServicePage({access}:{access:Row}){const {t,lang,Link,version}=useUI();const can=(p:string)=>access.permissions?.includes(p);const [molds,setMolds]=useState<Row[]|null>(null),[images,setImages]=useState<Record<string,Row>>({}),[maint,setMaint]=useState<Record<string,string>>({}),[chrome,setChrome]=useState<Record<string,string>>({}),[q,setQ]=useState(''),[sort,setSort]=useState('code'),[log,setLog]=useState<{mold:Row,kind:ServiceKind}|null>(null),[error,setError]=useState('');
+ const load=async()=>{try{const [m,img,a,b]=await Promise.all([db().from('molds').select('id,code,name_ar,name_en').is('deleted_at',null).order('code').limit(5000),db().from('mold_images').select('id,mold_id,bucket_id,storage_key,is_main,display_order').order('is_main',{ascending:false}).order('display_order').limit(10000),can('maintenance.view')?lastDates('maintenance'):Promise.resolve({}),can('chrome.view')?lastDates('chrome'):Promise.resolve({})]);setMolds(unwrap(m));const first:Record<string,Row>={};for(const row of img.data||[])first[row.mold_id]??=row;setImages(first);setMaint(a);setChrome(b)}catch(e){setError(message(e));setMolds([])}};
+ useEffect(()=>{load()},[version]);
+ const term=q.trim().toLowerCase();
+ const oldest=(map:Record<string,string>)=>(x:Row,y:Row)=>(map[x.id]||'0000')<(map[y.id]||'0000')?-1:(map[x.id]||'0000')>(map[y.id]||'0000')?1:0;
+ const list=(molds||[]).filter(m=>!term||[m.code,m.name_ar,m.name_en].some(v=>String(v||'').toLowerCase().includes(term))).sort(sort==='maintenance'?oldest(maint):sort==='chrome'?oldest(chrome):(a,b)=>String(a.code).localeCompare(String(b.code)));
+ return <><PageHead title={t('الصيانة والكروم','Maintenance & chrome')} subtitle={t('آخر مرة اتعملت صيانة أو كروم لكل أسطمبة. اضغط على الزر لتسجيل مرة جديدة.','The last maintenance and chrome date for every mold. Tap a button to log a new one.')}><Link href="/admin/maintenance" className="btn btn-outline"><History size={17}/>{t('سجل الصيانة','Maintenance log')}</Link><Link href="/admin/chrome" className="btn btn-outline"><History size={17}/>{t('سجل الكروم','Chrome log')}</Link></PageHead>
+  <div className="toolbar"><div className="search-bar"><Search size={18}/><input type="search" value={q} onChange={e=>setQ(e.target.value)} placeholder={t('ابحث بالكود أو الاسم','Search by code or name')}/></div><div className="segmented" role="tablist" aria-label={t('الترتيب','Sort')}>{[['code','بالكود','By code'],['maintenance','الأقدم صيانة','Oldest maintenance'],['chrome','الأقدم كروم','Oldest chrome']].map(([v,a,e])=><button key={v} role="tab" aria-selected={sort===v} className={sort===v?'active':''} onClick={()=>setSort(v)}>{t(a,e)}</button>)}</div></div>
+  {error&&<div className="alert">{error}</div>}
+  <div className="card service-list">{molds===null?<div className="center-block"><span className="spinner"/></div>:list.length?list.map(m=><div className="service-row" key={m.id}><Link href={'/admin/molds/'+m.id} className="mold-row-main"><span className="thumb lg">{images[m.id]?<Media record={images[m.id]} internal/>:<Layers3 size={22}/>}</span><span className="mold-row-text"><b>{m['name_'+lang]}</b><span className="code">{m.code}</span></span></Link>
+   <div className="service-cells">{can('maintenance.view')&&<div className="service-cell"><span className="service-label"><Wrench size={15}/>{t('آخر صيانة','Last maintenance')}</span><ServiceDate date={maint[m.id]}/>{can('maintenance.create')&&<button className="btn btn-sm btn-outline" onClick={()=>setLog({mold:m,kind:'maintenance'})}>{t('سجّل صيانة','Log')}</button>}</div>}
+   {can('chrome.view')&&<div className="service-cell"><span className="service-label"><Sparkles size={15}/>{t('آخر كروم','Last chrome')}</span><ServiceDate date={chrome[m.id]}/>{can('chrome.create')&&<button className="btn btn-sm btn-outline" onClick={()=>setLog({mold:m,kind:'chrome'})}>{t('سجّل كروم','Log')}</button>}</div>}</div></div>):<Empty title={term?t('لا توجد نتائج','Nothing found'):t('لا توجد أسطمبات بعد','No molds yet')}/>}</div>
+  {log&&<LogService mold={log.mold} kind={log.kind} onClose={()=>setLog(null)} onSaved={()=>{setLog(null);load()}}/>}</>}
