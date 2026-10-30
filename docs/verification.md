@@ -73,5 +73,6 @@ scoped API token, a query-signed PUT built exactly like `gd-media` passed the br
 from the Pages origin, uploaded, was served from the public URL as `image/webp` with the immutable
 Cache-Control, and was then deleted. The deployed `gd-media` function matches the repository, and
 `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` and `R2_PUBLIC_URL` are set
-as Supabase function secrets. Still to confirm: a staff upload from `/admin` creating a
-`mold_images` row with `bucket_id = 'r2'`.
+as Supabase function secrets. A staff upload from `/admin` then created a `mold_images` row with
+`bucket_id = 'r2'` (key `molds/<mold id>/<uuid>.webp`); the object is served from the public URL as
+`image/webp` (48 KB, immutable Cache-Control) and appears in `catalog_images` for the anon role.
