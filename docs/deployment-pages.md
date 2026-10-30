@@ -43,7 +43,7 @@ R2 is configured, uploads automatically keep using Supabase Storage.
 4. R2 → Manage API tokens → create a token with "Object Read & Write" on that bucket only.
 5. Supabase → Edge Functions → Secrets: `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`,
    `R2_BUCKET`, `R2_PUBLIC_URL`. Deploy the `gd-media` function.
-6. Pages → Settings → Environment variables: `VITE_R2_PUBLIC_URL` (same public URL), then redeploy.
+6. The public URL is set as the default in `lib/gd.ts`; `VITE_R2_PUBLIC_URL` (Pages → Settings → Environment variables) overrides it.
 
 `gd-media` issues a five-minute upload URL for one server-chosen key under `molds/<mold id>/`, only to
 active staff with `media.manage`.
