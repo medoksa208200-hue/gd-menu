@@ -7,7 +7,7 @@ export async function initClients(){if(staffClient)return;const c={url:import.me
 export const db=()=>staffClient;export const publicDB=()=>catalogClient;
 export function unwrap(result:{data:any,error:any}):any{if(result.error)throw Error(result.error.message);return result.data}
 export function message(e:unknown,lang:Language=currentLanguage()){const text=typeof e==='string'?e:e instanceof Error?e.message:e&&typeof e==='object'&&'message' in e?String(e.message):'Operation failed';return localizedError(text,lang)}
-export function dimensions(m:Row,lang:Language=currentLanguage()){return ['diameter_mm','length_mm','width_mm','height_mm','depth_mm'].filter(k=>m[k]).map(k=>(k==='diameter_mm'?'Ø ':'')+m[k]).join(' × ')+' '+term('mm',lang)}
+export function dimensions(m:Row,lang:Language=currentLanguage(),limit=5){return ['diameter_mm','length_mm','width_mm','height_mm','depth_mm'].filter(k=>m[k]).slice(0,limit).map(k=>(k==='diameter_mm'?'Ø ':'')+m[k]).join(' × ')+' '+term('mm',lang)}
 export function normalizeNumbers(v:Row,keys:string[]){const r={...v};for(const k of keys)r[k]=v[k]===''||v[k]===undefined?null:Number(v[k]);return r}
 // Signed URLs are cached until shortly before expiry so repeat renders reuse the same URL (and the browser's
 // HTTP cache), and requests made in the same tick are batched into one createSignedUrls call per bucket.
