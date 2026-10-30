@@ -292,3 +292,12 @@ test('public images may live in R2; private images may not',async()=>{
  await as('anon');
  assert.ok((await sql("select * from public.catalog_images where bucket_id='r2'")).length===1);
 });
+
+test('thumbnails belong to the same R2 mold folder and are public with the image',async()=>{
+ await as('authenticated',staff);
+ await sql("insert into public.mold_images(mold_id,bucket_id,storage_key,thumb_key,visibility,is_approved) values($1::uuid,'r2','molds/'||$1::text||'/t.webp','molds/'||$1::text||'/t-thumb.webp','public',true)",[mold]);
+ await denied("insert into public.mold_images(mold_id,bucket_id,storage_key,thumb_key,visibility,is_approved) values($1::uuid,'r2','molds/'||$1::text||'/u.webp','molds/'||$2::text||'/u-thumb.webp','public',true)",[mold,draft]);
+ await denied("insert into public.mold_images(mold_id,bucket_id,storage_key,thumb_key,visibility,is_approved) values($1::uuid,'catalog-media','molds/'||$1::text||'/v.webp','molds/'||$1::text||'/v-thumb.webp','public',true)",[mold]);
+ await as('anon');
+ assert.equal((await sql("select thumb_key from public.catalog_images where storage_key like '%/t.webp'"))[0].thumb_key,`molds/${mold}/t-thumb.webp`);
+});

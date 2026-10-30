@@ -76,3 +76,12 @@ Cache-Control, and was then deleted. The deployed `gd-media` function matches th
 as Supabase function secrets. A staff upload from `/admin` then created a `mold_images` row with
 `bucket_id = 'r2'` (key `molds/<mold id>/<uuid>.webp`); the object is served from the public URL as
 `image/webp` (48 KB, immutable Cache-Control) and appears in `catalog_images` for the anon role.
+
+## 2026-10-30 Media cleanup and thumbnails
+
+Deleting a photo in the workspace now goes through `gd-media` (`action: "delete"`): the row is deleted as the
+caller (RLS and the approved-media guard still apply), then the file is removed from R2 (with its thumbnail)
+or from Supabase Storage with the server key, unless another row still references the same object.
+New R2 uploads also store a ~640px WebP thumbnail (`mold_images.thumb_key`, migration
+`20261030150000_image_thumbnails`, applied to production); catalog cards and workspace lists load it and fall
+back to the full image when it is missing. A schema test covers the thumbnail constraint and its public view.
