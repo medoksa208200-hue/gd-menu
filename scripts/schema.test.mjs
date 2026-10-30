@@ -264,3 +264,31 @@ test('RLS policies evaluate auth helpers once per statement',async()=>{
  const rows=await sql("select policyname,qual,with_check from pg_policies where schemaname='public'");
  for(const r of rows)for(const e of [r.qual,r.with_check])if(e)assert.doesNotMatch(e.replace(/\(\s*SELECT (auth\.uid\(\)|private\.\w+\([^)]*\))( AS \w+)?\)/gi,''),/auth\.uid\(\)|private\.(has_permission\('|is_staff|is_super_admin|is_service)/,r.policyname);
 });
+
+test('designs offered in every color match any color filter',async()=>{
+ await as('service_role');
+ const [{id:color}]=await sql("insert into public.colors(name_ar,name_en,hex) values('تجريبي','Test teal','#118899') returning id");
+ await as('anon');
+ assert.equal((await sql('select * from public.search_catalog(color_filter=>$1)',[color])).length,0);
+ await as('authenticated',staff);
+ await sql("update public.molds set all_colors=true where id=$1",[mold]);
+ await as('anon');
+ const rows=await sql('select code,all_colors from public.search_catalog(color_filter=>$1)',[color]);
+ assert.deepEqual(rows.map(r=>[r.code,r.all_colors]),[['GD-001',true]]);
+ await as('authenticated',staff);await sql("update public.molds set all_colors=false where id=$1",[mold]);
+});
+
+test('mold editors can add palette colors; viewers cannot',async()=>{
+ await as('authenticated',editor);
+ await sql("insert into public.colors(name_ar,name_en,hex) values('زيتي','Olive test','#6b7b3a')");
+ await as('authenticated',viewer);
+ await denied("insert into public.colors(name_ar,name_en,hex) values('x','Viewer color','#000001')");
+});
+
+test('public images may live in R2; private images may not',async()=>{
+ await as('authenticated',staff);
+ await sql("insert into public.mold_images(mold_id,bucket_id,storage_key,visibility,is_approved) values($1::uuid,'r2','molds/'||$1::text||'/edge.webp','public',true)",[mold]);
+ await denied("insert into public.mold_images(mold_id,bucket_id,storage_key,visibility) values($1::uuid,'r2','molds/'||$1::text||'/secret.webp','private')",[mold]);
+ await as('anon');
+ assert.ok((await sql("select * from public.catalog_images where bucket_id='r2'")).length===1);
+});
