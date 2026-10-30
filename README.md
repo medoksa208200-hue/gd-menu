@@ -46,30 +46,16 @@ pnpm build
 
 ## Application features
 
-- Arabic/English, RTL/LTR, original GD logo and responsive public/admin layouts.
-- Published-only catalog, bilingual code/name search, database pagination,
-  dimension/category/color filters, galleries, comparisons and enquiries.
-- Configurable categories, public contact settings and marketing collections.
-- Username/password staff accounts: no invitations or confirmation emails.
-- One-time owner setup protected by an expiring random secret; only its hash is
-  stored in private server settings. Ordinary user creation is Super Admin-only.
-- Staff creation, role changes, disable/enable and administrator password resets.
-- Mold create/edit, transactional specifications/categories/colors/machines,
-  draft/publication workflow, duplication, soft deletion and restore.
-- Public/private images with client image decoding and re-encoding, storage MIME
-  and size restrictions, publication approval, ordering and main-image selection.
-- PDF technical documents, private by default, with explicit public approval.
-- Historical maintenance/chrome and append-only production logs, photos,
-  operating-life aggregates, date/cycle schedules and currency-separated costs.
-- Actual dashboard metrics, charts, activity history and printable reports.
-- Excel template, import preview and per-row results, Excel exports, QR cards,
-  browser printing / Save as PDF. Imports are atomic per mold, not per entire batch.
-- Published-only event ingestion on a rate-limited Supabase function; view totals
-  deduplicate per visitor hash/day. No raw IP addresses are stored.
+**Catalog (public URL, shown in person to customers).** A private, read-only mold catalog: browse by
+category, search by code or name, filter by color/shape/dimensions (centimeters), or scan a mold's QR
+card with the phone camera to open it. There is no contact, ordering, WhatsApp or marketing content,
+and the site is excluded from search engines (`robots.txt`, `noindex` meta and `X-Robots-Tag`).
 
-The editorial hero artwork is AI-generated and labeled as illustrative. Product
-records and sales figures are never fabricated. The live catalog remains empty
-until the factory adds and publishes its actual products.
+**Workspace (`/admin`, staff only).**
+- Molds: photos, codes, names, categories, colors (palette, custom hex, "available in all colors"),
+  dimensions, website visibility switch, QR card to share with a customer.
+- Categories & colors, homepage sections, staff accounts and change history.
+- Maintenance & chrome: the last maintenance and last chrome date of every mold, logged in one tap.
 
 ## Supabase deployment
 
