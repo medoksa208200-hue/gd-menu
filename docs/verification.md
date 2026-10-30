@@ -55,3 +55,12 @@ auto-updatable, so the anon role could UPDATE/INSERT/DELETE company settings, ca
 sections through them (verified in a rolled-back transaction). `20261029230624_lock_public_views`
 restores SELECT-only access and removes implicit default privileges; the test fixture now mirrors
 Supabase defaults and a regression test covers writes through every projection.
+
+## 2026-10-30 performance, colors and R2 update
+
+`20261030091000_performance_and_hardening` and `20261030100000_colors_and_r2_media` were applied to
+production by the owner through the SQL editor (the combined, idempotent script). Verified afterwards:
+`molds.all_colors` and `catalog_molds.all_colors` exist, `get_lifecycle_report`, the editor color
+policy, the R2 image constraint and the new indexes are present, no public policy evaluates auth
+helpers per row, anonymous search works and the public projections remain read-only. Both files are
+idempotent, so re-running them (e.g. `supabase db push`) is harmless.
