@@ -27,6 +27,8 @@ begin
   for p in select tablename,policyname,qual,with_check from pg_policies where schemaname='public' loop
     q:=regexp_replace(p.qual,pattern,'(select \1)','g');
     c:=regexp_replace(p.with_check,pattern,'(select \1)','g');
+    if p.qual ~* '\(\s*select\s+(auth\.uid|private\.)' then q:=p.qual; end if;
+    if p.with_check ~* '\(\s*select\s+(auth\.uid|private\.)' then c:=p.with_check; end if;
     if q is distinct from p.qual then execute format('alter policy %I on public.%I using (%s)',p.policyname,p.tablename,q); end if;
     if c is distinct from p.with_check then execute format('alter policy %I on public.%I with check (%s)',p.policyname,p.tablename,c); end if;
   end loop;
@@ -79,7 +81,7 @@ revoke all on function public.search_catalog(text,text,text,uuid,numeric,numeric
 grant execute on function public.search_catalog(text,text,text,uuid,numeric,numeric,numeric,numeric,numeric,numeric,numeric,numeric,text,integer,integer) to anon,authenticated;
 
 -- Operational report in one round trip instead of one get_mold_lifecycle call per mold.
-create function public.get_lifecycle_report() returns setof private.mold_lifecycle
+create or replace function public.get_lifecycle_report() returns setof private.mold_lifecycle
 language plpgsql stable security definer set search_path='' as $$
 begin
   if not private.has_permission('reports.view') then raise exception 'reports.view required' using errcode='42501'; end if;

@@ -11,6 +11,7 @@ from public.molds m left join public.mold_specifications s on s.mold_id=m.id
 where m.publication_status='published' and m.deleted_at is null;
 
 -- Staff who edit molds may add new colors from the palette while editing; managing names stays with categories.manage.
+drop policy if exists colors_insert_by_editors on public.colors;
 create policy colors_insert_by_editors on public.colors for insert to authenticated with check((select private.has_permission('molds.edit')));
 
 -- Public catalog images may be stored in Cloudflare R2 (served from a public, immutable, edge-cached URL).
@@ -20,6 +21,7 @@ do $$ declare c record; begin
     execute format('alter table public.mold_images drop constraint %I',c.conname);
   end loop;
 end $$;
+alter table public.mold_images drop constraint if exists mold_images_bucket_visibility;
 alter table public.mold_images add constraint mold_images_bucket_visibility check ((visibility='public' and bucket_id in ('catalog-media','r2')) or (visibility='private' and bucket_id='factory-files'));
 create or replace view public.catalog_images with(security_barrier=true) as
 select i.id,i.mold_id,i.bucket_id,i.storage_key,i.image_type,i.alt_ar,i.alt_en,i.display_order,i.is_main
