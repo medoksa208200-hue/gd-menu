@@ -1,6 +1,6 @@
 'use client';
 import React,{lazy,Suspense,useEffect,useRef,useState} from 'react';
-import {LayoutGrid,Layers3,Tags,Wrench,Sparkles,Factory,Users,BarChart3,History,Globe,LogOut,Plus,Menu,ExternalLink,ShieldCheck,Printer,X,Eye,EyeOff,ImageOff,Cog,Receipt,ArrowLeft,ArrowRight,UserPlus,KeyRound} from 'lucide-react';
+import {LayoutGrid,Layers3,Tags,Wrench,Droplet,Factory,Users,BarChart3,History,Globe,LogOut,Plus,Menu,ExternalLink,ShieldCheck,Printer,X,Eye,EyeOff,ImageOff,Cog,Receipt,ArrowLeft,ArrowRight,UserPlus,KeyRound} from 'lucide-react';
 import {db,unwrap,Row,message,num,invokeChecked} from '@/lib/gd';
 import {useUI} from './platform';
 import {toast} from 'sonner';
@@ -17,7 +17,7 @@ import PasswordRequirements from './password-requirements';
 import {staffIdentity} from '@/supabase/functions/_shared/staff-identity.mjs';
 import {validPassword} from '@/supabase/functions/_shared/password-policy.mjs';
 type NavItem=[slug:string,ar:string,en:string,icon:any,allowed:(can:(p:string)=>boolean)=>boolean];
-const factoryPages:NavItem[]=[['maintenance','سجل الصيانة','Maintenance log',Wrench,c=>c('maintenance.view')],['chrome','سجل الكروم','Chrome log',Sparkles,c=>c('chrome.view')]];
+const factoryPages:NavItem[]=[['maintenance','سجل الصيانة','Maintenance log',Wrench,c=>c('maintenance.view')],['chrome','سجل الكروم','Chrome log',Droplet,c=>c('chrome.view')]];
 // Six destinations only; factory records live under one "Factory" page, change history under "Staff".
 const menu:NavItem[]=[['','الرئيسية','Home',LayoutGrid,()=>true],['molds','الأسطمبات','Molds',Layers3,c=>c('molds.view')],['categories','التصنيفات والألوان','Categories & colors',Tags,c=>c('categories.manage')],['service','الصيانة والكروم','Maintenance & chrome',Wrench,c=>c('maintenance.view')||c('chrome.view')],['site','الصفحة الرئيسية للموقع','Website homepage',Globe,c=>c('content.manage')],['users','الموظفون','Staff',Users,c=>c('users.manage')]];
 const pages:NavItem[]=[...menu,...factoryPages,['activity','سجل التعديلات','Change history',History,c=>c('activity.view')]];

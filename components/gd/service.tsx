@@ -1,6 +1,6 @@
 'use client';
 import React,{useEffect,useState} from 'react';
-import {Search,Wrench,Sparkles,Layers3,History} from 'lucide-react';
+import {Search,Wrench,Droplet,Layers3,History} from 'lucide-react';
 import {toast} from 'sonner';
 import {db,unwrap,Row,message} from '@/lib/gd';
 import {formatDate} from '@/lib/i18n';
@@ -35,5 +35,5 @@ export default function ServicePage({access}:{access:Row}){const {t,lang,Link,ve
   {error&&<div className="alert">{error}</div>}
   <div className="card service-list">{molds===null?<div className="center-block"><span className="spinner"/></div>:list.length?list.map(m=><div className="service-row" key={m.id}><Link href={'/admin/molds/'+m.id} className="mold-row-main"><span className="thumb lg">{images[m.id]?<Media record={images[m.id]} internal/>:<Layers3 size={22}/>}</span><span className="mold-row-text"><b>{m['name_'+lang]}</b><span className="code">{m.code}</span></span></Link>
    <div className="service-cells">{can('maintenance.view')&&<div className="service-cell"><span className="service-label"><Wrench size={15}/>{t('آخر صيانة','Last maintenance')}</span><ServiceDate date={maint[m.id]}/>{can('maintenance.create')&&<button className="btn btn-sm btn-outline" onClick={()=>setLog({mold:m,kind:'maintenance'})}>{t('سجّل صيانة','Log')}</button>}</div>}
-   {can('chrome.view')&&<div className="service-cell"><span className="service-label"><Sparkles size={15}/>{t('آخر كروم','Last chrome')}</span><ServiceDate date={chrome[m.id]}/>{can('chrome.create')&&<button className="btn btn-sm btn-outline" onClick={()=>setLog({mold:m,kind:'chrome'})}>{t('سجّل كروم','Log')}</button>}</div>}</div></div>):<Empty title={term?t('لا توجد نتائج','Nothing found'):t('لا توجد أسطمبات بعد','No molds yet')}/>}</div>
+   {can('chrome.view')&&<div className="service-cell"><span className="service-label"><Droplet size={15}/>{t('آخر كروم','Last chrome')}</span><ServiceDate date={chrome[m.id]}/>{can('chrome.create')&&<button className="btn btn-sm btn-outline" onClick={()=>setLog({mold:m,kind:'chrome'})}>{t('سجّل كروم','Log')}</button>}</div>}</div></div>):<Empty title={term?t('لا توجد نتائج','Nothing found'):t('لا توجد أسطمبات بعد','No molds yet')}/>}</div>
   {log&&<LogService mold={log.mold} kind={log.kind} onClose={()=>setLog(null)} onSaved={()=>{setLog(null);load()}}/>}</>}
