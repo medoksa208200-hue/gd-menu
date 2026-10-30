@@ -230,3 +230,65 @@ test('real analytics ingestion is service-only, validates publication and dedupl
  assert.equal(Number((await sql('select count(*) n from public.mold_views where mold_id=$1 and session_hash=$2',[mold,visitor]))[0].n),1);
  assert.equal((await sql("select public.ingest_catalog_event($1,'view',$2,null) accepted",[visitor,draft]))[0].accepted,false);
 });
+
+test('anonymous and staff clients cannot write through public catalog projections',async()=>{
+ for(const role of ['anon','authenticated']){
+  await as(role,role==='anon'?null:staff);
+  await denied("update public.catalog_company set public_phone='+200000000000'");
+  await denied("insert into public.catalog_categories(id,name_ar,name_en,slug) values(gen_random_uuid(),'x','x','injected')");
+  await denied('delete from public.catalog_homepage_sections');
+  await denied('truncate public.catalog_company');
+ }
+ await as('anon');
+ assert.ok((await sql('select * from public.catalog_company')).length<=1);
+});
+
+test('catalog search treats LIKE wildcards literally',async()=>{
+ await as('anon');
+ assert.equal((await sql("select * from public.search_catalog(search_text=>'%')")).length,0);
+ assert.equal((await sql("select * from public.search_catalog(search_text=>'GD_001')")).length,0);
+ assert.deepEqual((await sql("select code from public.search_catalog(search_text=>'gd-0')")).map(r=>r.code),['GD-001']);
+ await denied("select * from public.search_catalog(shape_filter=>repeat('x',101))");
+});
+
+test('lifecycle report is one permission-gated call',async()=>{
+ await as('anon');await denied('select * from public.get_lifecycle_report()');
+ await as('authenticated',outsider);await denied('select * from public.get_lifecycle_report()');
+ await as('authenticated',staff);
+ const rows=await sql('select code from public.get_lifecycle_report()');
+ assert.ok(rows.some(r=>r.code==='GD-001'));
+});
+
+test('RLS policies evaluate auth helpers once per statement',async()=>{
+ await db.exec('reset role');
+ const rows=await sql("select policyname,qual,with_check from pg_policies where schemaname='public'");
+ for(const r of rows)for(const e of [r.qual,r.with_check])if(e)assert.doesNotMatch(e.replace(/\(\s*SELECT (auth\.uid\(\)|private\.\w+\([^)]*\))( AS \w+)?\)/gi,''),/auth\.uid\(\)|private\.(has_permission\('|is_staff|is_super_admin|is_service)/,r.policyname);
+});
+
+test('designs offered in every color match any color filter',async()=>{
+ await as('service_role');
+ const [{id:color}]=await sql("insert into public.colors(name_ar,name_en,hex) values('تجريبي','Test teal','#118899') returning id");
+ await as('anon');
+ assert.equal((await sql('select * from public.search_catalog(color_filter=>$1)',[color])).length,0);
+ await as('authenticated',staff);
+ await sql("update public.molds set all_colors=true where id=$1",[mold]);
+ await as('anon');
+ const rows=await sql('select code,all_colors from public.search_catalog(color_filter=>$1)',[color]);
+ assert.deepEqual(rows.map(r=>[r.code,r.all_colors]),[['GD-001',true]]);
+ await as('authenticated',staff);await sql("update public.molds set all_colors=false where id=$1",[mold]);
+});
+
+test('mold editors can add palette colors; viewers cannot',async()=>{
+ await as('authenticated',editor);
+ await sql("insert into public.colors(name_ar,name_en,hex) values('زيتي','Olive test','#6b7b3a')");
+ await as('authenticated',viewer);
+ await denied("insert into public.colors(name_ar,name_en,hex) values('x','Viewer color','#000001')");
+});
+
+test('public images may live in R2; private images may not',async()=>{
+ await as('authenticated',staff);
+ await sql("insert into public.mold_images(mold_id,bucket_id,storage_key,visibility,is_approved) values($1::uuid,'r2','molds/'||$1::text||'/edge.webp','public',true)",[mold]);
+ await denied("insert into public.mold_images(mold_id,bucket_id,storage_key,visibility) values($1::uuid,'r2','molds/'||$1::text||'/secret.webp','private')",[mold]);
+ await as('anon');
+ assert.ok((await sql("select * from public.catalog_images where bucket_id='r2'")).length===1);
+});

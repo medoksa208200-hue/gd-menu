@@ -12,7 +12,7 @@
     "build": "vite build --config vite.pages.config.ts",
     "preview": "vite preview --config vite.pages.config.ts",
     "typecheck": "tsc --noEmit",
-    "test": "node --test scripts/schema.test.mjs scripts/password-policy.test.mjs"
+    "test": "node --test scripts/schema.test.mjs scripts/password-policy.test.mjs scripts/http.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.104.0",

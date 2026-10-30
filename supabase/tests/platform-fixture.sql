@@ -19,3 +19,7 @@ create table storage.buckets(id text primary key,name text,public boolean,file_s
 create table storage.objects(id uuid primary key default gen_random_uuid(),bucket_id text references storage.buckets(id),name text not null,unique(bucket_id,name));
 alter table storage.objects enable row level security;
 grant select,insert,update,delete on storage.objects to anon,authenticated,service_role;
+-- Mirror Supabase's hosted defaults: objects created by migrations are granted to the API roles unless revoked.
+alter default privileges in schema public grant all on tables to anon,authenticated,service_role;
+alter default privileges in schema public grant all on sequences to anon,authenticated,service_role;
+alter default privileges in schema public grant execute on functions to anon,authenticated,service_role;

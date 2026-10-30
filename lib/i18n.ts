@@ -2,8 +2,8 @@ export type Language='ar'|'en';
 export const currentLanguage=():Language=>typeof document!=='undefined'&&document.documentElement.lang==='en'?'en':'ar';
 const terms:Record<string,[string,string]>={
  manual:['اختيار يدوي','Manual selection'],latest:['الأحدث','Latest'],most_viewed:['الأكثر مشاهدة','Most viewed'],most_searched:['الأكثر بحثًا','Most searched'],best_selling:['الأكثر مبيعًا','Best selling'],category:['حسب التصنيف','By category'],
- draft:['مسودة','Draft'],published:['منشور','Published'],unpublished:['غير منشور','Unpublished'],archived:['مؤرشف','Archived'],active:['نشطة','Active'],inactive:['غير نشطة','Inactive'],maintenance:['تحت الصيانة','Under maintenance'],retired:['خارج الخدمة','Retired'],planned:['مخطط لها','Planned'],in_progress:['قيد التنفيذ','In progress'],completed:['مكتملة','Completed'],cancelled:['ملغاة','Cancelled'],
- super_admin:['مدير النظام','System administrator'],admin:['مدير','Administrator'],supervisor:['مشرف','Supervisor'],viewer:['للاطلاع فقط','Viewer'],public:['عامة','Public'],private:['داخلية / سرية','Private'],approved:['معتمدة','Approved'],unapproved:['غير معتمدة','Not approved'],main:['رئيسية','Main'],product:['منتج','Product'],mold:['أسطمبة','Mold'],before:['قبل','Before'],after:['بعد','After'],
+ draft:['مسودة','Draft'],published:['ظاهرة على الموقع','On website'],unpublished:['مخفية','Hidden'],archived:['مؤرشفة','Archived'],active:['تعمل','In service'],inactive:['متوقفة','Not in use'],maintenance:['في الصيانة','In maintenance'],retired:['خارج الخدمة','Retired'],planned:['مخطط لها','Planned'],in_progress:['قيد التنفيذ','In progress'],completed:['مكتملة','Completed'],cancelled:['ملغاة','Cancelled'],
+ super_admin:['مدير النظام','System administrator'],admin:['مدير','Administrator'],supervisor:['مشرف','Supervisor'],viewer:['اطلاع فقط','Viewer'],public:['للعملاء','Public'],private:['داخلية','Internal'],approved:['معتمدة','Approved'],unapproved:['غير معتمدة','Not approved'],main:['رئيسية','Main'],product:['منتج','Product'],mold:['أسطمبة','Mold'],before:['قبل','Before'],after:['بعد','After'],
  EGP:['جنيه مصري','Egyptian pound'],SAR:['ريال سعودي','Saudi riyal'],USD:['دولار أمريكي','US dollar'],EUR:['يورو','Euro'],
  INSERT:['إضافة','Create'],UPDATE:['تعديل','Update'],DELETE:['حذف','Delete'],insert:['إضافة','Create'],update:['تعديل','Update'],delete:['حذف','Delete'],
  mm:['مم','mm'],g:['جم','g'],ml:['مل','ml'],cycles:['دورة','cycles'],units:['وحدة','units'],
@@ -21,7 +21,7 @@ const tables:Record<string,[string,string]>={molds:['الأسطمبات','Molds'
 export function term(value:unknown,lang:Language=currentLanguage()):string{const key=String(value??'');return terms[key]?.[lang==='ar'?0:1]??key;}
 export function fieldLabel(key:string,lang:Language=currentLanguage()):string{return fieldLabels[key]?.[lang==='ar'?0:1]??(lang==='ar'?'بيانات إضافية':key.replaceAll('_',' '));}
 export function tableLabel(key:string,lang:Language=currentLanguage()):string{return tables[key]?.[lang==='ar'?0:1]??(lang==='ar'?'سجل المصنع':key.replaceAll('_',' '));}
-export function formatDate(value:unknown,lang:Language=currentLanguage()):string{if(!value)return '—';const date=new Date(String(value));return Number.isNaN(date.getTime())?'—':new Intl.DateTimeFormat(lang==='ar'?'ar-EG':'en-GB').format(date);}
+export function formatDate(value:unknown,lang:Language=currentLanguage()):string{if(!value)return '—';const date=new Date(String(value));return Number.isNaN(date.getTime())?'—':new Intl.DateTimeFormat(lang==='ar'?'ar-EG-u-nu-latn':'en-GB').format(date);}
 export function localizedError(value:string,lang:Language=currentLanguage()):string{
  if(lang==='en')return value;
  if(/[\u0600-\u06ff]/.test(value)&&!/[A-Za-z]{3,}/.test(value))return value;

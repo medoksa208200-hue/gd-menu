@@ -2,7 +2,7 @@
 
 ## Database
 
-Supabase project: gd menu (`uaozbculriwhfilzklyr`). Eight ordered migrations
+Supabase project: gd menu (`uaozbculriwhfilzklyr`). Ordered migrations
 are applied. All application tables have RLS. Anonymous users have no direct
 SELECT grants on factory base tables. Both media buckets remain private.
 
@@ -47,3 +47,11 @@ per-row failures. File validation includes image decoding/re-encoding, PDF signa
 MIME and size checks, but no external antivirus service. Factory products and sales
 must be supplied by authorized staff. Email invitations are replaced with usernames
 and passwords by the user's explicit request.
+
+## 2026-10-30 security fix
+
+The public catalog views had inherited Supabase's default ALL privileges. Simple projections were
+auto-updatable, so the anon role could UPDATE/INSERT/DELETE company settings, categories and homepage
+sections through them (verified in a rolled-back transaction). `20261029230624_lock_public_views`
+restores SELECT-only access and removes implicit default privileges; the test fixture now mirrors
+Supabase defaults and a regression test covers writes through every projection.
