@@ -64,3 +64,14 @@ production by the owner through the SQL editor (the combined, idempotent script)
 policy, the R2 image constraint and the new indexes are present, no public policy evaluates auth
 helpers per row, anonymous search works and the public projections remain read-only. Both files are
 idempotent, so re-running them (e.g. `supabase db push`) is harmless.
+
+## 2026-10-30 R2 media connection
+
+The `gd-media` bucket has public r2.dev access and a CORS rule allowing `PUT` (content-type,
+cache-control) from `https://gd-menu.pages.dev` and `http://localhost:5173`. With the bucket's
+scoped API token, a query-signed PUT built exactly like `gd-media` passed the browser preflight
+from the Pages origin, uploaded, was served from the public URL as `image/webp` with the immutable
+Cache-Control, and was then deleted. The deployed `gd-media` function matches the repository, and
+`R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` and `R2_PUBLIC_URL` are set
+as Supabase function secrets. Still to confirm: a staff upload from `/admin` creating a
+`mold_images` row with `bucket_id = 'r2'`.
