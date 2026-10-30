@@ -23,7 +23,7 @@ trimmed, and may change without breaking the permanent UUID or history.
 out of service does not automatically unpublish its listing. `deleted_at` controls
 soft deletion separately. Restoring a published record requires publication permission.
 
-Dimensions are millimeters, product weights grams, capacities milliliters, and
+Dimensions are centimeters (the `*_mm` column names are historical), product weights grams, capacities milliliters, and
 financial fields decimal amounts with a three-letter currency code. Missing
 measurements are NULL rather than zero. Rejects are included in total produced
 quantity and cannot exceed it. Press cycles and units produced are separate fields.
