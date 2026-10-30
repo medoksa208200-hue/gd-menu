@@ -630,6 +630,8 @@ a.product-card{color:inherit}
 .scanner-top .icon-btn{color:#fff;background:rgba(255,255,255,.15)}
 .scanner-error{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:14px;padding:24px;text-align:center;background:#0d0d0f;color:#fff}
 .scanner-error p{color:#c9c9cf;max-width:320px}
+.scanner-bottom{position:absolute;bottom:0;inset-inline:0;display:flex;justify-content:center;padding:24px 16px max(28px,env(safe-area-inset-bottom));background:linear-gradient(0deg,rgba(0,0,0,.65),transparent)}
+.light-ghost{color:#c9c9cf}.light-ghost:hover{background:rgba(255,255,255,.1)!important;color:#fff}
 /* ───── Maintenance & chrome list ───── */
 .service-list{padding:6px 10px}
 .service-row{display:flex;align-items:center;gap:16px;padding:12px 8px;border-bottom:1px solid var(--line)}
