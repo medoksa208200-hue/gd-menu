@@ -311,8 +311,8 @@ test('mold tags are limited to the known set, saved through the bundle and searc
  await sql('select public.save_mold_bundle($1,$2::jsonb)',[id,JSON.stringify({code:'TAG-1',name_ar:'وسم',name_en:'Tagged',publication_status:'published'})]);
  assert.deepEqual((await sql('select tags from public.molds where id=$1',[id]))[0].tags.sort(),['best_seller','limited']);
  await as('anon');
- assert.deepEqual((await sql("select code from public.search_catalog(tag_filter=>'best_seller')")).map(r=>r.code),['TAG-1']);
- assert.equal((await sql("select * from public.search_catalog(tag_filter=>'trending')")).length,0);
+ assert.deepEqual((await sql("select code from public.search_catalog_tagged(tag_filter=>'best_seller')")).map(r=>r.code),['TAG-1']);
+ assert.equal((await sql("select * from public.search_catalog_tagged(tag_filter=>'trending')")).length,0);
  assert.ok((await sql("select tags from public.catalog_molds where code='TAG-1'"))[0].tags.includes('limited'));
  await as('authenticated',staff);
  await sql("update public.molds set deleted_at=now() where id=$1",[id]);

@@ -13,9 +13,8 @@ select m.id,m.code,m.name_ar,m.name_en,m.description_ar,m.description_en,
 from public.molds m left join public.mold_specifications s on s.mold_id=m.id
 where m.publication_status='published' and m.deleted_at is null;
 
-drop function if exists public.search_catalog(text,text,text,uuid,numeric,numeric,numeric,numeric,numeric,numeric,numeric,numeric,text,integer,integer);
-drop function if exists public.search_catalog(text,text,text,uuid,numeric,numeric,numeric,numeric,numeric,numeric,numeric,numeric,text,integer,integer,text);
-create function public.search_catalog(
+-- The full catalog search, including the tag filter.
+create or replace function public.search_catalog_tagged(
   search_text text default null, category_slug text default null, shape_filter text default null,
   color_filter uuid default null,
   diameter_min numeric default null, diameter_max numeric default null,
@@ -58,8 +57,22 @@ begin
     m.published_at desc,m.id
   limit page_size offset (page_number-1)*page_size;
 end $$;
-revoke all on function public.search_catalog(text,text,text,uuid,numeric,numeric,numeric,numeric,numeric,numeric,numeric,numeric,text,integer,integer,text) from public;
-grant execute on function public.search_catalog(text,text,text,uuid,numeric,numeric,numeric,numeric,numeric,numeric,numeric,numeric,text,integer,integer,text) to anon,authenticated;
+-- search_catalog keeps its signature (no drop) and delegates, so clients that predate tags keep working.
+create or replace function public.search_catalog(
+  search_text text default null, category_slug text default null, shape_filter text default null,
+  color_filter uuid default null,
+  diameter_min numeric default null, diameter_max numeric default null,
+  length_min numeric default null, length_max numeric default null,
+  width_min numeric default null, width_max numeric default null,
+  height_min numeric default null, height_max numeric default null,
+  sort_by text default 'latest', page_number integer default 1, page_size integer default 24
+) returns setof public.catalog_molds
+language sql stable security definer set search_path='' as $$
+  select * from public.search_catalog_tagged(search_text,category_slug,shape_filter,color_filter,diameter_min,diameter_max,
+    length_min,length_max,width_min,width_max,height_min,height_max,sort_by,page_number,page_size,null);
+$$;
+revoke all on function public.search_catalog_tagged(text,text,text,uuid,numeric,numeric,numeric,numeric,numeric,numeric,numeric,numeric,text,integer,integer,text),public.search_catalog(text,text,text,uuid,numeric,numeric,numeric,numeric,numeric,numeric,numeric,numeric,text,integer,integer) from public;
+grant execute on function public.search_catalog_tagged(text,text,text,uuid,numeric,numeric,numeric,numeric,numeric,numeric,numeric,numeric,text,integer,integer,text),public.search_catalog(text,text,text,uuid,numeric,numeric,numeric,numeric,numeric,numeric,numeric,numeric,text,integer,integer) to anon,authenticated;
 
 create or replace function public.get_homepage_collection(section uuid) returns setof public.catalog_molds
 language plpgsql stable security definer set search_path='' as $$

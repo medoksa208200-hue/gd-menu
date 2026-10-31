@@ -85,3 +85,12 @@ or from Supabase Storage with the server key, unless another row still reference
 New R2 uploads also store a ~640px WebP thumbnail (`mold_images.thumb_key`, migration
 `20261030150000_image_thumbnails`, applied to production); catalog cards and workspace lists load it and fall
 back to the full image when it is missing. A schema test covers the thumbnail constraint and its public view.
+
+## 2026-10-31 Mold tags
+
+`20261030160000_mold_tags` adds `molds.tags` (best_seller, trending, exclusive, limited, coming_soon; checked),
+exposes it in `catalog_molds`, and adds `search_catalog_tagged(..., tag_filter)`. `search_catalog` keeps its
+signature and delegates to it, so nothing is dropped and older clients keep working. `save_mold_bundle` saves
+`tags` only when the payload includes it. Applied to production; verified as `anon` through PostgREST that
+`search_catalog` and `search_catalog_tagged` return the published molds, `tag_filter=>'new'` returns only the new
+mold, and `catalog_molds.tags` is readable. A schema test covers allowed values, de-duplication and the filter.
