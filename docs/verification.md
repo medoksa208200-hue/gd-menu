@@ -64,3 +64,33 @@ production by the owner through the SQL editor (the combined, idempotent script)
 policy, the R2 image constraint and the new indexes are present, no public policy evaluates auth
 helpers per row, anonymous search works and the public projections remain read-only. Both files are
 idempotent, so re-running them (e.g. `supabase db push`) is harmless.
+
+## 2026-10-30 R2 media connection
+
+The `gd-media` bucket has public r2.dev access and a CORS rule allowing `PUT` (content-type,
+cache-control) from `https://gd-menu.pages.dev` and `http://localhost:5173`. With the bucket's
+scoped API token, a query-signed PUT built exactly like `gd-media` passed the browser preflight
+from the Pages origin, uploaded, was served from the public URL as `image/webp` with the immutable
+Cache-Control, and was then deleted. The deployed `gd-media` function matches the repository, and
+`R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` and `R2_PUBLIC_URL` are set
+as Supabase function secrets. A staff upload from `/admin` then created a `mold_images` row with
+`bucket_id = 'r2'` (key `molds/<mold id>/<uuid>.webp`); the object is served from the public URL as
+`image/webp` (48 KB, immutable Cache-Control) and appears in `catalog_images` for the anon role.
+
+## 2026-10-30 Media cleanup and thumbnails
+
+Deleting a photo in the workspace now goes through `gd-media` (`action: "delete"`): the row is deleted as the
+caller (RLS and the approved-media guard still apply), then the file is removed from R2 (with its thumbnail)
+or from Supabase Storage with the server key, unless another row still references the same object.
+New R2 uploads also store a ~640px WebP thumbnail (`mold_images.thumb_key`, migration
+`20261030150000_image_thumbnails`, applied to production); catalog cards and workspace lists load it and fall
+back to the full image when it is missing. A schema test covers the thumbnail constraint and its public view.
+
+## 2026-10-31 Mold tags
+
+`20261030160000_mold_tags` adds `molds.tags` (best_seller, trending, exclusive, limited, coming_soon; checked),
+exposes it in `catalog_molds`, and adds `search_catalog_tagged(..., tag_filter)`. `search_catalog` keeps its
+signature and delegates to it, so nothing is dropped and older clients keep working. `save_mold_bundle` saves
+`tags` only when the payload includes it. Applied to production; verified as `anon` through PostgREST that
+`search_catalog` and `search_catalog_tagged` return the published molds, `tag_filter=>'new'` returns only the new
+mold, and `catalog_molds.tags` is readable. A schema test covers allowed values, de-duplication and the filter.

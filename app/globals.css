@@ -129,6 +129,9 @@ input[type=search]::-webkit-search-cancel-button{display:none}
 .pill-green{background:var(--green-50);color:var(--green)}.pill-gray{background:var(--soft-2);color:var(--muted)}.pill-red{background:var(--red-50);color:var(--red)}.pill-amber{background:var(--amber-50);color:var(--amber)}
 .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700;background:var(--contrast);color:var(--on-contrast)}
 .badge-red{background:var(--red)}
+/* Mold tags sit on photos, so their colors stay fixed in both themes. */
+.badge-gold{background:#a16207;color:#fff}.badge-dark{background:#0d0d0f;color:#fff}.badge-blue{background:#1d4ed8;color:#fff}
+.badge-violet{background:#6d28d9;color:#fff}.badge-amber{background:#c2410c;color:#fff}.badge-gray{background:#52525b;color:#fff}
 .tag{display:inline-flex;align-items:center;padding:4px 12px;border-radius:999px;background:var(--soft-2);font-size:13px;font-weight:600}
 .tag:hover{background:var(--line)}
 .swatch-row{display:flex;flex-wrap:wrap;gap:8px}
@@ -281,7 +284,7 @@ button.swatch:hover:not(:disabled){border-color:var(--ink)}
 .product-media{position:relative;display:block;aspect-ratio:1;background:var(--soft);overflow:hidden}
 .product-media img{width:100%;height:100%;object-fit:cover;transition:transform .5s var(--ease)}
 .product-card:hover .product-media img{transform:scale(1.04)}
-.badges{position:absolute;top:12px;inset-inline-start:12px;display:flex;gap:6px}
+.badges{position:absolute;top:12px;inset-inline:12px;display:flex;flex-wrap:wrap;gap:6px;pointer-events:none}
 .compare-toggle{position:absolute;top:10px;inset-inline-end:10px;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--float-bg);box-shadow:var(--sh-1);color:var(--ink-2);opacity:0;transition:opacity .2s,background .2s,color .2s}
 .product-card:hover .compare-toggle,.compare-toggle:focus-visible,.compare-toggle.on{opacity:1}
 .compare-toggle.on{background:var(--contrast);color:var(--on-contrast)}

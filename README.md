@@ -54,6 +54,8 @@ and the site is excluded from search engines (`robots.txt`, `noindex` meta and `
 **Workspace (`/admin`, staff only).**
 - Molds: photos, codes, names, categories, colors (palette, custom hex, "available in all colors"),
   dimensions, website visibility switch, QR card to share with a customer.
+- Customer tags per mold: New, Best seller, Featured, Trending, Exclusive, Limited, Coming soon. Cards show
+  two, the mold page shows all, and the catalog filter can narrow by tag.
 - Categories & colors, homepage sections, staff accounts and change history.
 - Maintenance & chrome: the last maintenance and last chrome date of every mold, logged in one tap.
 

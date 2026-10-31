@@ -292,3 +292,28 @@ test('public images may live in R2; private images may not',async()=>{
  await as('anon');
  assert.ok((await sql("select * from public.catalog_images where bucket_id='r2'")).length===1);
 });
+
+test('thumbnails belong to the same R2 mold folder and are public with the image',async()=>{
+ await as('authenticated',staff);
+ await sql("insert into public.mold_images(mold_id,bucket_id,storage_key,thumb_key,visibility,is_approved) values($1::uuid,'r2','molds/'||$1::text||'/t.webp','molds/'||$1::text||'/t-thumb.webp','public',true)",[mold]);
+ await denied("insert into public.mold_images(mold_id,bucket_id,storage_key,thumb_key,visibility,is_approved) values($1::uuid,'r2','molds/'||$1::text||'/u.webp','molds/'||$2::text||'/u-thumb.webp','public',true)",[mold,draft]);
+ await denied("insert into public.mold_images(mold_id,bucket_id,storage_key,thumb_key,visibility,is_approved) values($1::uuid,'catalog-media','molds/'||$1::text||'/v.webp','molds/'||$1::text||'/v-thumb.webp','public',true)",[mold]);
+ await as('anon');
+ assert.equal((await sql("select thumb_key from public.catalog_images where storage_key like '%/t.webp'"))[0].thumb_key,`molds/${mold}/t-thumb.webp`);
+});
+
+test('mold tags are limited to the known set, saved through the bundle and searchable',async()=>{
+ await as('authenticated',staff);
+ const payload={code:'TAG-1',name_ar:'وسم',name_en:'Tagged',publication_status:'published',is_featured:true,tags:['best_seller','limited','best_seller']};
+ const id=(await sql('select public.save_mold_bundle(null,$1::jsonb) id',[JSON.stringify(payload)]))[0].id;
+ assert.deepEqual((await sql('select tags from public.molds where id=$1',[id]))[0].tags.sort(),['best_seller','limited']);
+ await denied('select public.save_mold_bundle($1,$2::jsonb)',[id,JSON.stringify({...payload,tags:['free_gift']})]);
+ await sql('select public.save_mold_bundle($1,$2::jsonb)',[id,JSON.stringify({code:'TAG-1',name_ar:'وسم',name_en:'Tagged',publication_status:'published'})]);
+ assert.deepEqual((await sql('select tags from public.molds where id=$1',[id]))[0].tags.sort(),['best_seller','limited']);
+ await as('anon');
+ assert.deepEqual((await sql("select code from public.search_catalog_tagged(tag_filter=>'best_seller')")).map(r=>r.code),['TAG-1']);
+ assert.equal((await sql("select * from public.search_catalog_tagged(tag_filter=>'trending')")).length,0);
+ assert.ok((await sql("select tags from public.catalog_molds where code='TAG-1'"))[0].tags.includes('limited'));
+ await as('authenticated',staff);
+ await sql("update public.molds set deleted_at=now() where id=$1",[id]);
+});
