@@ -24,3 +24,8 @@ and publishable key. Server secrets are injected into Supabase Edge Functions.
 To use a new Supabase project, apply migrations in order, deploy gd-owner, gd-staff
 and gd-events, configure a new one-time owner secret hash through a trusted
 backend, and configure the two public Pages build environment variables.
+
+## Hosting accounts
+
+- Supabase: the `gd menu` organization and project (`uaozbculriwhfilzklyr`) belong to the account
+  `gdmela1@gmail.com`.
