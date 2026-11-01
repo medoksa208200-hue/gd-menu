@@ -1,0 +1,14 @@
+type Row = Record<string, any>;
+export type Verdict = 'high' | 'normal' | 'low' | 'suspicious' | 'none';
+export type FleetAlert = { kind: 'consumption_high' | 'consumption_suspicious' | 'odometer_back' | 'unlogged_distance' | 'repeated_part' | 'oil_due' | 'oil_soon' | 'oil_unknown'; severity: 'high' | 'medium' | 'low'; vehicle_id: string; plate: string; [key: string]: any };
+export type VehicleStats = { vehicle: Row; type?: Row; fills: number; distance: number; liters: number; fuelCost: number; otherCost: number; totalCost: number; kmPerLiter: number | null; expected: number | null; deviation: number | null; verdict: Verdict; costPerKm: number | null; odometer: number; lastFill: Row | null; lastOil: Row | null; kmSinceOil: number | null; daysSinceOil: number | null; oilStatus: 'ok' | 'soon' | 'due' | 'unknown' };
+export type MonthPoint = { month: string; fuelCost: number; otherCost: number; distance: number; liters: number; kmPerLiter: number | null };
+export type FleetReport = { rows: VehicleStats[]; alerts: FleetAlert[]; totals: { vehicles: number; distance: number; liters: number; fuelCost: number; otherCost: number; totalCost: number; kmPerLiter: number | null; costPerKm: number | null; alerts: number; highAlerts: number }; byCategory: Record<string, number>; monthly: MonthPoint[] };
+export const REPEAT_PART_DAYS: number;
+export const UNLOGGED_GAP_KM: number;
+export const SERVICE_CATEGORIES: string[];
+export function normalizePart(name: unknown): string;
+export function verdict(kmPerLiter: number | null, type?: Row): Verdict;
+export function inPeriod(date: string, period?: { from?: string; to?: string }): boolean;
+export function analyzeFleet(input: { types?: Row[]; vehicles?: Row[]; fuel?: Row[]; expenses?: Row[]; period?: { from?: string; to?: string }; today?: string }): FleetReport;
+export function monthlySeries(fuel: Row[], expenses: Row[], today: string, count?: number): MonthPoint[];

@@ -317,3 +317,38 @@ test('mold tags are limited to the known set, saved through the bundle and searc
  await as('authenticated',staff);
  await sql("update public.molds set deleted_at=now() where id=$1",[id]);
 });
+
+test('fleet: viewers read, supervisors log in their own name, managers manage, the public sees nothing',async()=>{
+ await as('authenticated',staff);
+ await sql("select public.set_staff_access($1,'supervisor',true)",[supervisor]);
+ const type=(await sql("select id,expected_km_per_liter from public.vehicle_types where name_ar='دوبل كابينة'"))[0];
+ assert.ok(type,'seeded vehicle type');
+ const car=(await sql("insert into public.vehicles(plate_number,type_id,driver_name) values('ن ص ر 1234',$1,'Driver') returning id",[type.id]))[0].id;
+ await denied("insert into public.vehicles(plate_number,type_id) values('نصر1234',$1)",[type.id]);
+ await as('authenticated',supervisor);
+ const fill=(await sql("insert into public.fuel_logs(vehicle_id,odometer_start,odometer_end,liters,price_per_liter,photo_start_key) values($1::uuid,1000,1450,50,15.5,'fleet/'||$1::text||'/a.webp') returning distance_km,km_per_liter,total_cost",[car]))[0];
+ assert.equal(Number(fill.distance_km),450);assert.equal(Number(fill.km_per_liter),9);assert.equal(Number(fill.total_cost),775);
+ await denied("insert into public.fuel_logs(vehicle_id,odometer_start,odometer_end,liters) values($1::uuid,1450,1400,10)",[car]);
+ await denied("insert into public.fuel_logs(vehicle_id,odometer_start,odometer_end,liters,photo_end_key) values($1::uuid,1,2,1,'fleet/'||$2::text||'/x.webp')",[car,mold]);
+ await denied("insert into public.fuel_logs(vehicle_id,odometer_start,odometer_end,liters,created_by) values($1::uuid,1,2,1,$2)",[car,staff]);
+ await sql("insert into public.vehicle_expenses(vehicle_id,category,part_name,amount) values($1::uuid,'spare_part','فلتر هواء',300)",[car]);
+ await denied("insert into public.vehicle_expenses(vehicle_id,category,amount) values($1::uuid,'spare_part',300)",[car]);
+ await denied("insert into public.vehicle_expenses(vehicle_id,category,amount) values($1::uuid,'oil_change',300)",[car]);
+ await denied("insert into public.vehicles(plate_number,type_id) values('X 1',$1)",[type.id]);
+ assert.equal((await sql('update public.fuel_logs set liters=1 returning id')).length,0);
+ assert.equal((await sql('delete from public.vehicle_expenses returning id')).length,0);
+ assert.equal((await sql("select private.can_access_object('factory-files','fleet/'||$1::text||'/p.webp',true) ok",[car]))[0].ok,true);
+ await as('authenticated',viewer);
+ assert.equal((await sql('select * from public.fuel_logs')).length,1);
+ await denied("insert into public.vehicle_expenses(vehicle_id,category,amount) values($1::uuid,'washing',50)",[car]);
+ assert.equal((await sql("select private.can_access_object('factory-files','fleet/'||$1::text||'/p.webp',true) ok",[car]))[0].ok,false);
+ assert.equal((await sql("select private.can_access_object('factory-files','fleet/'||$1::text||'/p.webp',false) ok",[car]))[0].ok,true);
+ await as('authenticated',outsider);
+ assert.equal((await sql('select * from public.vehicles')).length,0);
+ await as('anon');
+ await denied('select * from public.vehicles');
+ await denied('select * from public.fuel_logs');
+ await as('authenticated',staff);
+ assert.equal((await sql('update public.fuel_logs set liters=45 where vehicle_id=$1 returning km_per_liter',[car]))[0].km_per_liter,'10.00');
+ assert.equal((await sql('delete from public.vehicle_expenses where vehicle_id=$1 returning id',[car])).length,1);
+});
