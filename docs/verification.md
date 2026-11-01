@@ -111,3 +111,15 @@ vehicle type, odometer going backwards, distance between fills that was never lo
 replaced again within 90 days (Arabic spelling variants folded), and oil change due by km or days. Schema tests
 cover permissions, ownership, generated values, checks and storage paths; the UI was screenshot at desktop and
 phone width in light and dark mode with sample data (mocked API, production untouched).
+
+## 2026-11-01 Homepage sections and fleet date range
+
+The live "best sellers" section was published but showed nothing: that type only listed designs with imported
+sales, and there are none, so the homepage hid the empty section. `20261101120000_homepage_sections_delete`
+makes `get_homepage_collection` also include designs tagged `best_seller` (sales first, then tagged), grants
+DELETE on `homepage_sections` (picked designs cascade) to `content.manage`, and requires `content.publish` to
+delete a live one. Applied to production; verified with a rolled-back check that tagging one design takes the
+section from 0 to 1 design for an anonymous visitor, and that production tags were left unchanged. The
+workspace now shows how many designs each live section displays and warns when one is empty.
+Fleet analytics gained a custom from/to date range (kept for the browser session across pages); the monthly
+chart follows the chosen range (1–12 months).

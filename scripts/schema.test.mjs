@@ -352,3 +352,22 @@ test('fleet: viewers read, supervisors log in their own name, managers manage, t
  assert.equal((await sql('update public.fuel_logs set liters=45 where vehicle_id=$1 returning km_per_liter',[car]))[0].km_per_liter,'10.00');
  assert.equal((await sql('delete from public.vehicle_expenses where vehicle_id=$1 returning id',[car])).length,1);
 });
+
+test('best-seller sections show tagged designs; sections are deleted with their picks, live ones only by publishers',async()=>{
+ await as('authenticated',staff);
+ const best=(await sql("insert into public.homepage_sections(title_ar,title_en,collection_type,is_published) values('الأكثر مبيعا','Tagged best sellers','best_selling',true) returning id"))[0].id;
+ await sql("update public.molds set tags=array['best_seller'] where id=$1",[mold]);
+ await as('anon');
+ assert.deepEqual((await sql('select code from public.get_homepage_collection($1)',[best])).map(r=>r.code),['GD-001']);
+ await denied('delete from public.homepage_sections where id=$1',[best]);
+ await as('authenticated',staff);
+ await sql("update public.molds set tags='{}' where id=$1",[mold]);
+ const draftSection=(await sql("insert into public.homepage_sections(title_ar,title_en,collection_type,is_published) values('مسودة','Draft','manual',false) returning id"))[0].id;
+ await sql('insert into public.homepage_section_items(section_id,mold_id) values($1,$2)',[draftSection,mold]);
+ await as('authenticated',editor);
+ assert.equal((await sql('delete from public.homepage_sections where id=$1 returning id',[best])).length,0);
+ assert.equal((await sql('delete from public.homepage_sections where id=$1 returning id',[draftSection])).length,1);
+ await as('authenticated',staff);
+ assert.equal((await sql('select * from public.homepage_section_items where section_id=$1',[draftSection])).length,0);
+ assert.equal((await sql('delete from public.homepage_sections where id=$1 returning id',[best])).length,1);
+});

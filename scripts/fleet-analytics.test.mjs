@@ -78,3 +78,14 @@ test('monthly series covers the last months in order', () => {
   assert.equal(series[0].otherCost, 100);
   assert.equal(series[2].kmPerLiter, 9);
 });
+
+test('the monthly chart follows the chosen date range', () => {
+  const fuel = [fill('f1', 'v1', '2026-03-10', 0, 90, 10), fill('f2', 'v1', '2026-05-02', 90, 180, 10)];
+  const ranged = analyzeFleet({ types: [double], vehicles: [car], fuel, expenses: [], period: { from: '2026-03-01', to: '2026-05-31' }, today: '2026-10-31' });
+  assert.deepEqual(ranged.monthly.map((m) => m.month), ['2026-03', '2026-04', '2026-05']);
+  assert.equal(ranged.rows[0].distance, 180);
+  const defaults = analyzeFleet({ types: [double], vehicles: [car], fuel, expenses: [], today: '2026-10-31' });
+  assert.equal(defaults.monthly.length, 6);
+  const long = analyzeFleet({ types: [double], vehicles: [car], fuel, expenses: [], period: { from: '2020-01-01' }, today: '2026-10-31' });
+  assert.equal(long.monthly.length, 12);
+});
