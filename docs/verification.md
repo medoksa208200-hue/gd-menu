@@ -94,3 +94,20 @@ signature and delegates to it, so nothing is dropped and older clients keep work
 `tags` only when the payload includes it. Applied to production; verified as `anon` through PostgREST that
 `search_catalog` and `search_catalog_tagged` return the published molds, `tag_filter=>'new'` returns only the new
 mold, and `catalog_molds.tags` is readable. A schema test covers allowed values, de-duplication and the filter.
+
+## 2026-11-01 Fleet: vehicles, fuel and expenses
+
+`20261101100000_fleet` adds `vehicle_types` (expected km per litre, tolerance, oil-change interval), `vehicles`,
+`fuel_logs` (odometer before/after, litres, price; distance, km/L and cost are generated columns) and
+`vehicle_expenses` (oil change, maintenance, spare part, tyres, battery, licence, insurance, fines, washing, tolls,
+other). Permissions: `fleet.view` (all roles), `fleet.log` (supervisor and up; records are inserted in the
+logger's own name), `fleet.manage` (admin and up; vehicles, types, corrections and deletes). Odometer and receipt
+photos go to the private `factory-files` bucket under `fleet/<vehicle id>/`, gated by `can_access_object`.
+Applied to production (the new tables needed no `drop ... if exists`, so that run omitted them); verified role
+grants, RLS on all four tables, no `anon` grants, the two seeded types, and no new security advisor findings.
+
+Analytics and alerts live in `lib/fleet-analytics.mjs` (pure, unit-tested): consumption judged against the
+vehicle type, odometer going backwards, distance between fills that was never logged (> 50 km), the same part
+replaced again within 90 days (Arabic spelling variants folded), and oil change due by km or days. Schema tests
+cover permissions, ownership, generated values, checks and storage paths; the UI was screenshot at desktop and
+phone width in light and dark mode with sample data (mocked API, production untouched).

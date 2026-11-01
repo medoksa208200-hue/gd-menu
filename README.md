@@ -58,6 +58,10 @@ and the site is excluded from search engines (`robots.txt`, `noindex` meta and `
   two, the mold page shows all, and the catalog filter can narrow by tag.
 - Categories & colors, homepage sections, staff accounts and change history.
 - Maintenance & chrome: the last maintenance and last chrome date of every mold, logged in one tap.
+- Vehicles & fuel (`/admin/fleet`): vehicles by plate and type (double cab, dababa, ...), fuel fills with odometer
+  before/after and photos, expenses and service history (oil, parts, tyres, licences...), a dashboard with cost and
+  consumption charts, and alerts for high consumption, odometer errors, unlogged distance, repeated part
+  replacements and overdue oil changes.
 
 ## Supabase deployment
 
