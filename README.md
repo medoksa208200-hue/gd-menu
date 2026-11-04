@@ -77,6 +77,21 @@ and the site is excluded from search engines (`robots.txt`, `noindex` meta and `
 - Database: `rep_shifts`, `rep_locations`, `rep_cells` (migration `20261104100000_rep_tracking.sql`); reps write only
   through `rep_*` functions that act on their own shift. Tests: `scripts/tracking.test.mjs`.
 
+**Fleet management (`/admin/fleet-ops`).**
+- Alerts: documents expiring within 30 days, maintenance due or close (85%), driving licences, parts at or below their
+  minimum and late work orders. The same feed drives the bell in the workspace top bar (`fleet_alerts()`).
+- Documents per vehicle (licence, insurance, inspection, permits) with expiry, cost and a photo; renewals keep history.
+- Maintenance plan: items every N km and/or N days, for all vehicles, a type or one vehicle. The last service is the
+  latest matching vehicle expense (`fleet_maintenance_status()`); one click opens a work order.
+- Work orders with priority, due date, workshop and labour; parts issued from the store. Closing one
+  (`close_work_order()`) records labour + parts as one vehicle expense.
+- Parts store with stock in/out/adjustments (stock follows a trigger), minimum levels and stock value.
+- Drivers: phone, licence and expiry, vehicle handovers (who has which vehicle since when) and violations.
+- Places (factory, warehouses, customers, suppliers) drawn on every tracking map; a stay of 3+ minutes inside a place
+  is a visit (`tracking_visits()`), and route stops are named after their place.
+- Monthly cost per vehicle: fuel, service and parts, other, cost per km, Excel export.
+- Database: migration `20261104120000_fleet_ops.sql`; tests: `scripts/fleet-ops.test.mjs`.
+
 ### Releasing a new Android app version
 
 ```bash
