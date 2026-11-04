@@ -935,3 +935,5 @@ tr.muted td{opacity:.6}
 .rep-history small{color:var(--muted);font-size:12px}
 .rep-history-num{display:flex;flex-direction:column;align-items:center;line-height:1.1}
 .rep-blocked{padding:16px;text-align:center}
+.rep-note{margin:-4px 2px 0;line-height:1.6}
+.rep-top .btn-sm{white-space:nowrap}

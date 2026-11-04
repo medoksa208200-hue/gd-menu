@@ -3,7 +3,7 @@
 // while working, fuel fills and expenses with photos, and end the day with the odometer.
 import React,{useEffect,useMemo,useState} from 'react';
 import L from 'leaflet';
-import {Truck,Fuel,Receipt,Flag,MapPin,Navigation,LogOut,CloudOff,Cloud,Camera,Download,Footprints,CircleAlert,Play,History} from 'lucide-react';
+import {Truck,Fuel,Receipt,Flag,MapPin,Navigation,LogOut,CloudOff,Cloud,Camera,Download,Footprints,CircleAlert,Play,History,LayoutDashboard} from 'lucide-react';
 import {toast} from 'sonner';
 import {db,unwrap,Row,message,num,uploadImage} from '@/lib/gd';
 import * as tracker from '@/lib/tracker';
@@ -26,6 +26,8 @@ function repError(e:unknown,lang:string){const text=message(e);if(lang!=='ar')re
 const hm=(ms:number,lang:string)=>{const m=Math.max(0,Math.round(ms/60000)),h=Math.floor(m/60);return lang==='ar'?(h?`${h} س ${m%60} د`:`${m} د`):(h?`${h}h ${m%60}m`:`${m}m`)};
 const kmText=(m:any)=>(Number(m||0)/1000).toFixed(1);
 const clock=(v:any,lang:string)=>v?new Date(v).toLocaleTimeString(lang==='ar'?'ar-EG':'en-GB',{hour:'numeric',minute:'2-digit'}):'—';
+// The Android app bundles the rep screens only in practice; managers open the dashboard on the website.
+const ADMIN_URL='https://gd-menu.pages.dev/admin';
 const dayText=(v:any,lang:string)=>new Date(v).toLocaleDateString(lang==='ar'?'ar-EG':'en-GB',{weekday:'short',day:'numeric',month:'short'});
 
 export default function RepApp(){const {t,lang}=useUI();const [user,setUser]=useState<Row|null|undefined>(undefined),[access,setAccess]=useState<Row|null>(null);
@@ -35,7 +37,7 @@ export default function RepApp(){const {t,lang}=useUI();const [user,setUser]=use
  if(user===undefined)return <div className="center-state"><span className="spinner"/></div>;
  if(!user)return <RepLogin reload={load}/>;
  if(!access?.active||!access.permissions?.includes('tracking.log'))return <main className="center-state rep-blocked"><span className="empty-icon"><CircleAlert size={30}/></span><h1>{t('الحساب ده مش متفعّل كمندوب','This account is not set up as a rep')}</h1><p>{t('اطلب من الإدارة تفعيل حسابك بصلاحية "مندوب".','Ask the office to give your account the "Sales rep" role.')}</p><div className="btn-row"><button className="btn btn-dark" onClick={()=>db().auth.signOut()}>{t('تسجيل الخروج','Sign out')}</button>{access?.permissions?.includes('tracking.view')&&<a className="btn btn-outline" href="/admin/tracking">{t('لوحة التتبع','Tracking dashboard')}</a>}</div></main>;
- return <RepHome/>}
+ return <RepHome manager={!!access.permissions?.includes('tracking.view')}/>}
 
 function RepLogin({reload}:{reload:()=>Promise<void>}){const {t}=useUI();const [username,setUsername]=useState(''),[password,setPassword]=useState(''),[busy,setBusy]=useState(false);
  return <main className="rep-login"><form className="card" onSubmit={async e=>{e.preventDefault();setBusy(true);try{const u=username.trim().toLowerCase();const r=await db().auth.signInWithPassword({email:staffIdentity(u,import.meta.env.VITE_SUPABASE_URL),password});if(r.error)throw Error(t('اسم المستخدم أو كلمة المرور غلط','Incorrect username or password'));await reload()}catch(e){toast.error(message(e))}finally{setBusy(false)}}}>
@@ -46,16 +48,16 @@ function RepLogin({reload}:{reload:()=>Promise<void>}){const {t}=useUI();const [
 
 function useInstall(){const [prompt,setPrompt]=useState<any>(null);useEffect(()=>{const h=(e:any)=>{e.preventDefault();setPrompt(e)};window.addEventListener('beforeinstallprompt',h);return()=>window.removeEventListener('beforeinstallprompt',h)},[]);return prompt}
 
-function RepHome(){const {t,lang}=useUI();const [ctx,setCtx]=useState<Row|null>(null),[track,setTrack]=useState<tracker.TrackerState|null>(null),[modal,setModal]=useState<''|'fuel'|'expense'|'end'>(''),[now,setNow]=useState(Date.now());
+function RepHome({manager}:{manager:boolean}){const {t,lang}=useUI();const [ctx,setCtx]=useState<Row|null>(null),[track,setTrack]=useState<tracker.TrackerState|null>(null),[modal,setModal]=useState<''|'fuel'|'expense'|'end'>(''),[now,setNow]=useState(Date.now());
  const install=useInstall();
  const load=async()=>{try{const c=unwrap(await db().rpc('rep_context'));setCtx(c);if(c.shift)tracker.start(c.shift.id,c.shift);else tracker.stop()}catch(e){toast.error(repError(e,lang));setCtx(c=>c||{vehicles:[],recent:[]})}};
  useEffect(()=>{load();const off=tracker.subscribe(setTrack);const tick=setInterval(()=>setNow(Date.now()),30000);return()=>{off();clearInterval(tick)}},[]);
  const shift=ctx?.shift;const vehicle=ctx?.vehicles?.find((v:Row)=>v.id===shift?.vehicle_id);
  return <div className="rep-app">
-  <header className="rep-top"><img width="54" height="40" src="/brand/gd-logo.webp" alt="GD"/><div><b>{ctx?.display_name||'…'}</b><small>{shift?t('في الوردية','On shift'):t('خارج الوردية','Off shift')}</small></div><ThemeButton/><button className="icon-btn" aria-label={t('تسجيل الخروج','Sign out')} onClick={async()=>{if(shift&&!confirm(t('الوردية لسه مفتوحة. لو خرجت التتبع هيقف. تخرج؟','Your shift is still open; signing out stops tracking. Sign out?')))return;await tracker.stop();await db().auth.signOut()}}><LogOut size={19}/></button></header>
+  <header className="rep-top"><img width="54" height="40" src="/brand/gd-logo.webp" alt="GD"/><div><b>{ctx?.display_name||'…'}</b><small>{shift?t('في الوردية','On shift'):t('خارج الوردية','Off shift')}</small></div>{manager&&<a className="btn btn-outline btn-sm" href={tracker.isNativeApp()?ADMIN_URL:'/admin'} target={tracker.isNativeApp()?'_blank':undefined} rel="noopener"><LayoutDashboard size={16}/>{t('لوحة الإدارة','Dashboard')}</a>}<ThemeButton/><button className="icon-btn" aria-label={t('تسجيل الخروج','Sign out')} onClick={async()=>{if(shift&&!confirm(t('الوردية لسه مفتوحة. لو خرجت التتبع هيقف. تخرج؟','Your shift is still open; signing out stops tracking. Sign out?')))return;await tracker.stop();await db().auth.signOut()}}><LogOut size={19}/></button></header>
   {!ctx?<div className="center-block"><span className="spinner"/></div>:shift?<ActiveShift shift={shift} vehicle={vehicle} track={track} now={now} onAction={setModal}/>:<StartShift ctx={ctx} onStarted={load}/>}
   {!tracker.isNativeApp()&&<div className="rep-install">{install?<button className="btn btn-outline btn-block" onClick={()=>install.prompt()}><Download size={17}/>{t('ثبّت التطبيق على الموبايل','Install on this phone')}</button>:null}<a className="btn btn-ghost btn-block" href="/downloads/gd-rep.apk" download><Download size={17}/>{t('تحميل تطبيق الأندرويد (تتبع والشاشة مقفولة)','Download the Android app (tracks with screen off)')}</a></div>}
-  {ctx?.recent?.length>0&&<section className="card rep-history"><h3><History size={17}/>{t('آخر الأيام','Recent days')}</h3><ul>{ctx!.recent.filter((r:Row)=>r.ended_at).slice(0,7).map((r:Row)=><li key={r.id}><span><b>{dayText(r.started_at,lang)}</b><small>{clock(r.started_at,lang)} – {clock(r.ended_at,lang)}{r.plate_number?' · '+r.plate_number:''}</small></span><span className="rep-history-num"><b>{kmText(r.distance_m)}</b><small>{t('كم','km')}</small></span>{r.new_cells>0&&<span className="pill pill-amber">{t(`${r.new_cells} منطقة جديدة`,`${r.new_cells} new`)}</span>}</li>)}</ul></section>}
+  {ctx?.recent?.length>0&&<section className="card rep-history"><h3><History size={17}/>{t('آخر الأيام','Recent days')}</h3><ul>{ctx!.recent.filter((r:Row)=>r.ended_at).slice(0,7).map((r:Row)=><li key={r.id}><span><b>{dayText(r.started_at,lang)}</b><small>{clock(r.started_at,lang)} – {clock(r.ended_at,lang)}{r.plate_number?' · '+r.plate_number:''}</small></span><span className="rep-history-num"><b>{kmText(r.distance_m)}</b><small>{t('كم','km')}</small></span>{r.new_cells>0&&<span className="pill pill-amber">{t(`${r.new_cells} مربع جديد`,`${r.new_cells} new`)}</span>}</li>)}</ul></section>}
   {modal==='fuel'&&vehicle&&<FuelForm vehicle={vehicle} onClose={()=>setModal('')} onDone={()=>{setModal('');load()}}/>}
   {modal==='expense'&&vehicle&&<ExpenseForm vehicle={vehicle} onClose={()=>setModal('')} onDone={()=>{setModal('');load()}}/>}
   {modal==='end'&&shift&&<EndForm shift={shift} vehicle={vehicle} track={track} onClose={()=>setModal('')} onDone={()=>{setModal('');load()}}/>}
@@ -90,7 +92,8 @@ function ActiveShift({shift,vehicle,track,now,onAction}:{shift:Row,vehicle?:Row,
    {s==='denied'&&<div className="alert">{t('افتح إعدادات الموبايل ← التطبيقات ← المتصفح/تطبيق GD ← الموقع، واختار "السماح طول الوقت" أو "أثناء الاستخدام".','Open phone Settings → Apps → this app → Location and allow it.')}</div>}
    {!track?.native&&s!=='denied'&&<p className="rep-hint">{t('خلي التطبيق مفتوح قدامك والشاشة شغالة (ممكن تقللها للآخر). عشان التتبع والشاشة مقفولة نزّل تطبيق الأندرويد.','Keep this app open on screen (you can dim it). For tracking with the screen off, install the Android app.')}</p>}
   </section>
-  <div className="rep-stats"><div><b>{kmText(track?.distanceM||shift.distance_m)}</b><span>{t('كم النهارده','km today')}</span></div><div><b>{num(track?.newCells??shift.new_cells)}</b><span>{t('منطقة جديدة','new areas')}</span></div><div><b>{num(track?.points||shift.points_count)}</b><span>{t('نقطة مسجلة','points')}</span></div></div>
+  <div className="rep-stats"><div><b>{kmText(track?.distanceM||shift.distance_m)}</b><span>{t('كم النهارده','km today')}</span></div><div><b>{num(track?.newCells??shift.new_cells)}</b><span>{t('مربع جديد','new cells')}</span></div><div><b>{num(track?.points||shift.points_count)}</b><span>{t('نقطة مسجلة','points')}</span></div></div>
+  <p className="muted small rep-note">{t('الخريطة متقسمة مربعات 150×150 متر. "مربع جديد" = أول مرة تعدّي فيه. أول يوم كل المربعات بتتحسب جديدة، ومن تاني يوم بيتحسب الجديد بس.','The map is split into 150×150 m cells. A “new cell” is one you pass through for the first time; on your first day every cell counts as new.')}</p>
   <MapView height={240} className="rep-map" fitKey={route.length>1?'route':'none'} deps={[route.length,fix?.t]} draw={g=>{if(route.length>1)L.polyline(route,{color:'#e30613',weight:4,opacity:.85}).addTo(g);const here=fix?[fix.lat,fix.lng] as [number,number]:route[route.length-1];if(here){L.marker(here,{icon:dot('#1d4ed8')}).addTo(g);if(route.length<=1)return L.latLng(here).toBounds(800)}return route.length>1?L.latLngBounds(route):null}}/>
   <div className="rep-actions">{vehicle&&<button className="rep-action" onClick={()=>onAction('fuel')}><Fuel size={24}/>{t('تفويل سولار','Fuel fill')}</button>}{vehicle&&<button className="rep-action" onClick={()=>onAction('expense')}><Receipt size={24}/>{t('مصروف / صيانة','Expense / service')}</button>}<button className="rep-action end" onClick={()=>onAction('end')}><Flag size={24}/>{t('إنهاء اليوم','End the day')}</button></div>
  </>}
@@ -122,7 +125,7 @@ function EndForm({shift,vehicle,track,onClose,onDone}:{shift:Row,vehicle?:Row,tr
    const left=await tracker.drain();if(left>0&&!confirm(t(`فيه ${left} نقطة لسه ما اترفعتش (مفيش نت). لو أنهيت دلوقتي ممكن جزء من خط السير يضيع. تنهي برضه؟`,`${left} points are not uploaded yet (no connection). End anyway?`)))return;
    const key=vehicle&&photo?(await uploadImage(photo,'factory-files','fleet/'+vehicle.id)).path:null;
    const s=unwrap(await db().rpc('rep_end_shift',{shift:shift.id,odometer:vehicle?Number(odometer):null,photo:key,note:note||null}));await tracker.stop();
-   toast.success(t(`خلصت اليوم: ${kmText(s.distance_m)} كم، ${s.new_cells} منطقة جديدة`,`Day ended: ${kmText(s.distance_m)} km, ${s.new_cells} new areas`),{duration:8000});onDone()}catch(e){toast.error(repError(e,lang))}finally{setBusy(false)}}}>
+   toast.success(t(`خلصت اليوم: ${kmText(s.distance_m)} كم، ${s.new_cells} مربع جديد`,`Day ended: ${kmText(s.distance_m)} km, ${s.new_cells} new areas`),{duration:8000});onDone()}catch(e){toast.error(repError(e,lang))}finally{setBusy(false)}}}>
   {vehicle&&<><label className="field">{t('قراءة العداد دلوقتي (كم)','Odometer now (km)')}<input required inputMode="decimal" type="number" step="0.1" min={shift.odometer_start||0} value={odometer} onChange={e=>setOdometer(e.target.value)}/><small className="muted">{t('بداية اليوم: ','Start of day: ')}{num(shift.odometer_start)}</small></label>
    {odoKm!=null&&odoKm>=0&&<div className="rep-compare"><span>{t('العداد','Odometer')}: <b>{num(Math.round(odoKm))} {t('كم','km')}</b></span><span>GPS: <b>{gpsKm.toFixed(1)} {t('كم','km')}</b></span></div>}
    <PhotoInput label={t('صوّر العداد','Photo of the odometer')} file={photo} onChange={setPhoto}/></>}
