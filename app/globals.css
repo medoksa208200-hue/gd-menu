@@ -954,3 +954,7 @@ tr.muted td{opacity:.6}
 .rep-ask p{margin:0 0 6px;font-size:16px;font-weight:600;line-height:1.7}
 .rep-settings{margin-top:10px}
 .rep-leftover{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:var(--r);background:var(--amber-50);color:var(--amber);font-size:13.5px;font-weight:600}
+
+/* Muted base map: streets turn grey so coloured routes and coverage stand out; labels stay readable. */
+.map-view .leaflet-tile-pane{filter:grayscale(.85) contrast(.92) brightness(1.04)}
+[data-theme=dark] .map-view .leaflet-tile-pane{filter:grayscale(.85) brightness(.7) contrast(1.1)}

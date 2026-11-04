@@ -10,7 +10,7 @@ import * as tracker from '@/lib/tracker';
 import {availableUpdate,openUpdate,currentVersion,type AppRelease} from '@/lib/app-update';
 import {useUI} from './platform';
 import {Modal,ThemeButton} from './ui';
-import {MapView,dot} from './map';
+import {MapView,dot,routeLine} from './map';
 import PasswordField from './password-field';
 import {CATEGORIES} from './fleet';
 import {staffIdentity} from '@/supabase/functions/_shared/staff-identity.mjs';
@@ -106,7 +106,7 @@ function ActiveShift({shift,vehicle,track,now,onAction}:{shift:Row,vehicle?:Row,
   </section>
   <div className="rep-stats"><div><b>{kmText(track?.distanceM||shift.distance_m)}</b><span>{t('كم النهارده','km today')}</span></div><div><b>{num(track?.newCells??shift.new_cells)}</b><span>{t('مربع جديد','new cells')}</span></div><div><b>{num(track?.points||shift.points_count)}</b><span>{t('نقطة مسجلة','points')}</span></div></div>
   <p className="muted small rep-note">{t('الخريطة متقسمة مربعات 150×150 متر. "مربع جديد" = أول مرة تعدّي فيه. أول يوم كل المربعات بتتحسب جديدة، ومن تاني يوم بيتحسب الجديد بس.','The map is split into 150×150 m cells. A “new cell” is one you pass through for the first time; on your first day every cell counts as new.')}</p>
-  <MapView height={240} className="rep-map" fitKey={route.length>1?'route':'none'} deps={[route.length,fix?.t]} draw={g=>{if(route.length>1)L.polyline(route,{color:'#e30613',weight:4,opacity:.85}).addTo(g);const here=fix?[fix.lat,fix.lng] as [number,number]:route[route.length-1];if(here){L.marker(here,{icon:dot('#1d4ed8')}).addTo(g);if(route.length<=1)return L.latLng(here).toBounds(800)}return route.length>1?L.latLngBounds(route):null}}/>
+  <MapView height={240} className="rep-map" fitKey={route.length>1?'route':'none'} deps={[route.length,fix?.t]} draw={g=>{routeLine(g,route,'#2563eb');const here=fix?[fix.lat,fix.lng] as [number,number]:route[route.length-1];if(here){L.marker(here,{icon:dot('#1d4ed8')}).addTo(g);if(route.length<=1)return L.latLng(here).toBounds(800)}return route.length>1?L.latLngBounds(route):null}}/>
   <div className="rep-actions">{vehicle&&<button className="rep-action" onClick={()=>onAction('fuel')}><Fuel size={24}/>{t('تفويل سولار','Fuel fill')}</button>}{vehicle&&<button className="rep-action" onClick={()=>onAction('expense')}><Receipt size={24}/>{t('مصروف / صيانة','Expense / service')}</button>}<button className="rep-action end" onClick={()=>onAction('end')}><Flag size={24}/>{t('إنهاء اليوم','End the day')}</button></div>
  </>}
 
