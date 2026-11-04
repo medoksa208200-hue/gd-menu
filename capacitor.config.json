@@ -1,0 +1,12 @@
+{
+  "appId": "com.gdtableware.rep",
+  "appName": "GD مندوب",
+  "webDir": "dist-pages",
+  "android": {
+    "allowMixedContent": false,
+    "useLegacyBridge": true
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}
