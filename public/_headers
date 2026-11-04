@@ -23,6 +23,10 @@
   Cache-Control: no-cache
   Service-Worker-Allowed: /rep
 
-/downloads/*
+/downloads/gd-rep.apk
   Cache-Control: no-cache
   Content-Type: application/vnd.android.package-archive
+
+/downloads/version.json
+  Cache-Control: no-cache
+  Access-Control-Allow-Origin: *

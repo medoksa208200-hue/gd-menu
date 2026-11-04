@@ -77,16 +77,17 @@ and the site is excluded from search engines (`robots.txt`, `noindex` meta and `
 - Database: `rep_shifts`, `rep_locations`, `rep_cells` (migration `20261104100000_rep_tracking.sql`); reps write only
   through `rep_*` functions that act on their own shift. Tests: `scripts/tracking.test.mjs`.
 
-### Building the Android app
+### Releasing a new Android app version
 
 ```bash
-pnpm build:android   # needs the two VITE_ variables, the Android SDK (ANDROID_HOME) and JDK 21
+pnpm build:android "What changed, shown to reps"   # add --required to block older versions
 ```
 
-It builds the site, leaves the previous APK out of the app bundle, syncs it into `android/`, assembles the APK and
-copies it to `public/downloads/gd-rep.apk`.
-
-The APK is published with the site at `/downloads/gd-rep.apk`; the rep app links to it.
+It needs the two VITE_ variables, the Android SDK (`ANDROID_HOME`) and JDK 21, and must be signed with the same key as
+the installed app. It bumps the version in `android/app/build.gradle`, builds the site and the APK, and writes
+`public/downloads/gd-rep.apk` and `public/downloads/version.json`. Commit and deploy: installed apps check
+`version.json` on launch and when they come back to the screen, and show an "update available" banner that downloads
+the new APK.
 
 ## Supabase deployment
 

@@ -3,10 +3,11 @@
 // while working, fuel fills and expenses with photos, and end the day with the odometer.
 import React,{useEffect,useMemo,useState} from 'react';
 import L from 'leaflet';
-import {Truck,Fuel,Receipt,Flag,MapPin,Navigation,LogOut,CloudOff,Cloud,Camera,Download,Footprints,CircleAlert,Play,History,LayoutDashboard} from 'lucide-react';
+import {Truck,Fuel,Receipt,Flag,MapPin,Navigation,LogOut,CloudOff,Cloud,Camera,Download,Footprints,CircleAlert,Play,History,LayoutDashboard,RefreshCw,X} from 'lucide-react';
 import {toast} from 'sonner';
 import {db,unwrap,Row,message,num,uploadImage} from '@/lib/gd';
 import * as tracker from '@/lib/tracker';
+import {availableUpdate,openUpdate,currentVersion,type AppRelease} from '@/lib/app-update';
 import {useUI} from './platform';
 import {Modal,ThemeButton} from './ui';
 import {MapView,dot} from './map';
@@ -55,6 +56,7 @@ function RepHome({manager}:{manager:boolean}){const {t,lang}=useUI();const [ctx,
  const shift=ctx?.shift;const vehicle=ctx?.vehicles?.find((v:Row)=>v.id===shift?.vehicle_id);
  return <div className="rep-app">
   <header className="rep-top"><img width="54" height="40" src="/brand/gd-logo.webp" alt="GD"/><div><b>{ctx?.display_name||'…'}</b><small>{shift?t('في الوردية','On shift'):t('خارج الوردية','Off shift')}</small></div>{manager&&<a className="btn btn-outline btn-sm" href={tracker.isNativeApp()?ADMIN_URL:'/admin'} target={tracker.isNativeApp()?'_blank':undefined} rel="noopener"><LayoutDashboard size={16}/>{t('لوحة الإدارة','Dashboard')}</a>}<ThemeButton/><button className="icon-btn" aria-label={t('تسجيل الخروج','Sign out')} onClick={async()=>{if(shift&&!confirm(t('الوردية لسه مفتوحة. لو خرجت التتبع هيقف. تخرج؟','Your shift is still open; signing out stops tracking. Sign out?')))return;await tracker.stop();await db().auth.signOut()}}><LogOut size={19}/></button></header>
+  <UpdateBanner/>
   {!ctx?<div className="center-block"><span className="spinner"/></div>:shift?<ActiveShift shift={shift} vehicle={vehicle} track={track} now={now} onAction={setModal}/>:<StartShift ctx={ctx} onStarted={load}/>}
   {!tracker.isNativeApp()&&<div className="rep-install">{install?<button className="btn btn-outline btn-block" onClick={()=>install.prompt()}><Download size={17}/>{t('ثبّت التطبيق على الموبايل','Install on this phone')}</button>:null}<a className="btn btn-ghost btn-block" href="/downloads/gd-rep.apk" download><Download size={17}/>{t('تحميل تطبيق الأندرويد (تتبع والشاشة مقفولة)','Download the Android app (tracks with screen off)')}</a></div>}
   {ctx?.recent?.length>0&&<section className="card rep-history"><h3><History size={17}/>{t('آخر الأيام','Recent days')}</h3><ul>{ctx!.recent.filter((r:Row)=>r.ended_at).slice(0,7).map((r:Row)=><li key={r.id}><span><b>{dayText(r.started_at,lang)}</b><small>{clock(r.started_at,lang)} – {clock(r.ended_at,lang)}{r.plate_number?' · '+r.plate_number:''}</small></span><span className="rep-history-num"><b>{kmText(r.distance_m)}</b><small>{t('كم','km')}</small></span>{r.new_cells>0&&<span className="pill pill-amber">{t(`${r.new_cells} مربع جديد`,`${r.new_cells} new`)}</span>}</li>)}</ul></section>}
@@ -131,3 +133,14 @@ function EndForm({shift,vehicle,track,onClose,onDone}:{shift:Row,vehicle?:Row,tr
    <PhotoInput label={t('صوّر العداد','Photo of the odometer')} file={photo} onChange={setPhoto}/></>}
   <label className="field">{t('ملاحظات اليوم (اختياري)','Notes (optional)')}<textarea rows={2} maxLength={1000} value={note} onChange={e=>setNote(e.target.value)}/></label>
   <div className="modal-foot"><button type="button" className="btn btn-ghost" onClick={onClose}>{t('رجوع','Back')}</button><button className="btn btn-red" disabled={busy}>{busy?<span className="spinner small light"/>:<><MapPin size={17}/>{t('إنهاء اليوم وإيقاف التتبع','End day and stop tracking')}</>}</button></div></form></Modal>}
+
+// New Android version: checked on launch and whenever the app comes back to the screen (at most every 20 minutes).
+function UpdateBanner(){const {t}=useUI();const [release,setRelease]=useState<(AppRelease&{required:boolean})|null>(null),[hidden,setHidden]=useState(false);
+ useEffect(()=>{let last=0;const check=()=>{if(document.visibilityState!=='visible'||Date.now()-last<20*60000)return;last=Date.now();availableUpdate().then(r=>{if(r){setRelease(r);setHidden(false)}})};check();document.addEventListener('visibilitychange',check);return()=>document.removeEventListener('visibilitychange',check)},[]);
+ if(!release||(hidden&&!release.required))return null;
+ const body=<><div className="rep-update-head"><RefreshCw size={20}/><b>{t('تحديث جديد للتطبيق','App update available')}</b>{!release.required&&<button className="icon-btn" aria-label={t('لاحقًا','Later')} onClick={()=>setHidden(true)}><X size={18}/></button>}</div>
+  <p>{t(`نسخة ${release.versionName} متاحة (إنت على ${currentVersion()}).`,`Version ${release.versionName} is available (you have ${currentVersion()}).`)}{release.required?' '+t('التحديث ده إجباري عشان تكمل.','This update is required to continue.'):''}</p>
+  {release.notes&&<p className="rep-update-notes">{release.notes}</p>}
+  <button className="btn btn-red btn-block" onClick={()=>openUpdate(release)}><Download size={17}/>{t('تحديث الآن','Update now')}</button>
+  <small className="muted">{t('هيتحمّل الملف، افتحه واضغط "تثبيت". بياناتك والوردية المفتوحة مش هيضيعوا.','The file downloads; open it and tap “Install”. Your data and open shift are kept.')}</small></>;
+ return release.required?<div className="overlay"><div className="modal rep-update">{body}</div></div>:<section className="card rep-update">{body}</section>}
