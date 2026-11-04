@@ -80,11 +80,11 @@ and the site is excluded from search engines (`robots.txt`, `noindex` meta and `
 ### Building the Android app
 
 ```bash
-pnpm build                       # needs the two VITE_ variables
-npx cap sync android
-cd android && ./gradlew assembleDebug   # needs the Android SDK (ANDROID_HOME) and JDK 21
-cp app/build/outputs/apk/debug/app-debug.apk ../public/downloads/gd-rep.apk
+pnpm build:android   # needs the two VITE_ variables, the Android SDK (ANDROID_HOME) and JDK 21
 ```
+
+It builds the site, leaves the previous APK out of the app bundle, syncs it into `android/`, assembles the APK and
+copies it to `public/downloads/gd-rep.apk`.
 
 The APK is published with the site at `/downloads/gd-rep.apk`; the rep app links to it.
 
