@@ -1,7 +1,7 @@
 'use client';
 // Rep tracking for managers: where every rep is now, each day's route with new streets and stops, and the
 // network the reps cover on the map.
-import React,{useEffect,useMemo,useState} from 'react';
+import React,{useEffect,useMemo,useRef,useState} from 'react';
 import L from 'leaflet';
 import {MapPin,Route,Map as MapIcon,Users,ArrowLeft,ArrowRight,Flag,Clock,Gauge,Sparkles,Smartphone,RefreshCw,TriangleAlert} from 'lucide-react';
 import {toast} from 'sonner';
@@ -34,12 +34,23 @@ function RepFilter({reps,value,onChange}:{reps:Row[],value:string,onChange:(v:st
 function Dates({from,to,setFrom,setTo}:{from:string,to:string,setFrom:(v:string)=>void,setTo:(v:string)=>void}){const {t}=useUI();const presets:[string,string,number][]=[['النهارده','Today',0],['7 أيام','7 days',6],['30 يوم','30 days',29],['90 يوم','90 days',89]];
  return <div className="tracking-dates"><div className="chip-row wrap">{presets.map(([a,e,n])=><button key={e} type="button" className={'chip'+(from===daysAgo(n)&&to===localDay()?' active':'')} onClick={()=>{setFrom(daysAgo(n));setTo(localDay())}}>{t(a,e)}</button>)}</div><label className="field inline"><span>{t('من','From')}</span><input type="date" value={from} max={to} onChange={e=>setFrom(e.target.value)}/></label><label className="field inline"><span>{t('إلى','To')}</span><input type="date" value={to} min={from} onChange={e=>setTo(e.target.value)}/></label></div>}
 
+// Today's route of every open shift, fetched incrementally: only points newer than the last one already loaded.
+function useLiveRoutes(shifts:Row[]){const store=useRef(new Map<string,{since:string|null,pts:[number,number][]}>()),[version,setVersion]=useState(0);
+ const key=shifts.map(s=>s.id+':'+(s.last_seen_at||'')).join('|');
+ useEffect(()=>{let cancelled=false;(async()=>{let changed=false;
+  for(const s of shifts){const r=store.current.get(s.id)||{since:null,pts:[]};
+   for(let page=0;page<20;page++){let q=db().from('rep_locations').select('lat,lng,recorded_at').eq('shift_id',s.id).lte('accuracy',100).order('recorded_at').limit(1000);if(r.since)q=q.gt('recorded_at',r.since);
+    const {data,error}=await q;if(error||!data?.length)break;for(const p of data)r.pts.push([p.lat,p.lng]);r.since=data[data.length-1].recorded_at;changed=true;if(data.length<1000)break}
+   store.current.set(s.id,r)}
+  if(changed&&!cancelled)setVersion(v=>v+1)})();return()=>{cancelled=true}},[key]);
+ return {routes:store.current,version}}
+
 function Live({reps,reload,access}:{reps:Row[],reload:()=>void,access:Row}){const {t,lang,Link}=useUI();const [,tick]=useState(0);
  useEffect(()=>{const i=setInterval(()=>{reload();tick(x=>x+1)},15000);return()=>clearInterval(i)},[]);
- const onShift=reps.filter(r=>r.shift);const live=onShift.filter(r=>r.shift.last_seen_at&&Date.now()-Date.parse(r.shift.last_seen_at)<180000);
+ const onShift=reps.filter(r=>r.shift);const {routes,version}=useLiveRoutes(onShift.map(r=>r.shift));const live=onShift.filter(r=>r.shift.last_seen_at&&Date.now()-Date.parse(r.shift.last_seen_at)<180000);
  const canEnd=access.permissions?.includes('fleet.manage');
  return <><div className="stat-cards"><div className="stat-card tone-green"><b>{num(live.length)}</b><span>{t('بيتحركوا دلوقتي (إشارة آخر 3 دقايق)','Live now (signal in last 3 min)')}</span></div><div className="stat-card tone-amber"><b>{num(onShift.length-live.length)}</b><span>{t('في الوردية والإشارة متأخرة','On shift, signal delayed')}</span></div><div className="stat-card tone-gray"><b>{num(reps.length-onShift.length)}</b><span>{t('خارج الوردية','Off shift')}</span></div><div className="stat-card tone-blue"><b>{kmText(onShift.reduce((s,r)=>s+Number(r.shift.distance_m||0),0))}</b><span>{t('كم اتقطعت النهارده (الورديات المفتوحة)','km driven in open shifts')}</span></div></div>
-  <div className="tracking-live"><section className="card tracking-map-card"><MapView height={520} fitKey={onShift.length} deps={[reps]} draw={g=>{const pts:[number,number][]=[];for(const r of onShift){const s=r.shift;if(s.last_lat==null)continue;const p:[number,number]=[s.last_lat,s.last_lng];pts.push(p);const stale=!s.last_seen_at||Date.now()-Date.parse(s.last_seen_at)>180000;L.marker(p,{icon:dot(stale?'#9a9aa1':colorOf(reps,r.id),r.display_name),title:r.display_name}).bindPopup(`<b>${r.display_name}</b><br>${s.plate_number||''}<br>${ago(s.last_seen_at,t)} · ${kmText(s.distance_m)} ${t('كم','km')}`).addTo(g)}return pts.length?L.latLngBounds(pts):null}}/></section>
+  <div className="tracking-live"><section className="card tracking-map-card"><MapView height={520} fitKey={onShift.length} deps={[reps,version]} draw={g=>{const pts:[number,number][]=[];for(const r of onShift){const s=r.shift;const line=routes.get(s.id)?.pts||[];if(line.length>1)L.polyline(line,{color:colorOf(reps,r.id),weight:4,opacity:.85}).addTo(g);if(s.last_lat==null)continue;const p:[number,number]=[s.last_lat,s.last_lng];pts.push(p);const stale=!s.last_seen_at||Date.now()-Date.parse(s.last_seen_at)>180000;L.marker(p,{icon:dot(stale?'#9a9aa1':colorOf(reps,r.id),r.display_name),title:r.display_name}).bindPopup(`<b>${r.display_name}</b><br>${s.plate_number||''}<br>${ago(s.last_seen_at,t)} · ${kmText(s.distance_m)} ${t('كم','km')}`).addTo(g)}return pts.length?L.latLngBounds(pts):null}}/></section>
    <section className="card tracking-list"><div className="card-head"><h3><Users size={18}/>{t('المناديب','Reps')}</h3><button className="icon-btn" aria-label={t('تحديث','Refresh')} onClick={reload}><RefreshCw size={17}/></button></div>
     {reps.length?<ul>{reps.map(r=>{const s=r.shift;const stale=s&&(!s.last_seen_at||Date.now()-Date.parse(s.last_seen_at)>180000);return <li key={r.id}><i style={{background:colorOf(reps,r.id)}}/><span className="grow"><b>{r.display_name}</b><small>{s?`${s.plate_number||t('بدون عربية','No vehicle')} · ${t('من ','since ')}${clock(s.started_at,lang)} · ${kmText(s.distance_m)} ${t('كم','km')}${s.new_cells?` · ${s.new_cells} ${t('جديدة','new')}`:''}`:r.last_seen_at?t('آخر وردية ','Last shift ')+ago(r.last_seen_at,t):t('لم يبدأ أي وردية بعد','No shifts yet')}</small></span>
       {s?<span className={'pill '+(stale?'pill-amber':'pill-green')}>{stale?ago(s.last_seen_at,t):t('مباشر','Live')}</span>:<span className="pill pill-gray">{t('خارج الوردية','Off')}</span>}

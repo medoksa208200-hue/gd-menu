@@ -8,7 +8,7 @@ export type Fix={t:number,lat:number,lng:number,acc:number|null,spd:number|null,
 export type TrackerState={status:'off'|'starting'|'on'|'denied'|'unavailable'|'error',native:boolean,lastFix:Fix|null,pending:number,
   lastSync:number|null,syncError:string|null,distanceM:number,newCells:number,points:number,route:[number,number][]};
 
-const QUEUE_KEY='gd-rep-queue',ROUTE_KEY='gd-rep-route',MAX_QUEUE=20000,MIN_MOVE_M=20,HEARTBEAT_MS=120000,FLUSH_MS=20000,MAX_ACC=100;
+const QUEUE_KEY='gd-rep-queue',ROUTE_KEY='gd-rep-route',MAX_QUEUE=20000,MIN_MOVE_M=20,MIN_GAP_MS=5000,HEARTBEAT_MS=120000,FLUSH_MS=20000,MAX_ACC=100;
 const read=<T,>(key:string,fallback:T):T=>{try{const v=localStorage.getItem(key);return v?JSON.parse(v):fallback}catch{return fallback}};
 const write=(key:string,v:unknown)=>{try{localStorage.setItem(key,JSON.stringify(v))}catch{}};
 export const meters=(a:{lat:number,lng:number},b:{lat:number,lng:number})=>{const r=Math.PI/180,dl=(b.lat-a.lat)*r,dn=(b.lng-a.lng)*r;const h=Math.sin(dl/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dn/2)**2;return 2*6371000*Math.asin(Math.min(1,Math.sqrt(h)))};
@@ -19,19 +19,19 @@ const listeners=new Set<(s:TrackerState)=>void>();
 const emit=(patch:Partial<TrackerState>)=>{state={...state,...patch};listeners.forEach(l=>l(state))};
 export const subscribe=(fn:(s:TrackerState)=>void)=>{listeners.add(fn);fn(state);return()=>{listeners.delete(fn)}};
 
-let shiftId:string|null=null,watchId:any=null,flushTimer:any=null,lastKept:Fix|null=null,flushing=false,wakeLock:any=null;
+let shiftId:string|null=null,watchId:any=null,flushTimer:any=null,lastKept:Fix|null=null,flushing=false,flushStarted=0,lastFlush=0,wakeLock:any=null;
 
 function accept(f:Fix){
   if(!shiftId)return;
   emit({lastFix:f,status:'on'});
   if(f.acc!=null&&f.acc>MAX_ACC)return;
-  // Keep a point when the rep moved, or every two minutes while standing still.
-  if(lastKept&&meters(lastKept,f)<Math.max(MIN_MOVE_M,(f.acc||0)*0.6)&&f.t-lastKept.t<HEARTBEAT_MS)return;
+  // Keep a point when the rep moved (at most one every 5 s, ~160 m apart on a highway), or every two minutes while standing still.
+  if(lastKept&&f.t-lastKept.t<HEARTBEAT_MS&&(f.t-lastKept.t<MIN_GAP_MS||meters(lastKept,f)<Math.max(MIN_MOVE_M,(f.acc||0)*0.6)))return;
   lastKept=f;
   const queue=read<Fix[]>(QUEUE_KEY,[]);queue.push(f);if(queue.length>MAX_QUEUE)queue.splice(0,queue.length-MAX_QUEUE);write(QUEUE_KEY,queue);
   const route=[...state.route,[f.lat,f.lng] as [number,number]].slice(-3000);write(ROUTE_KEY,{shift:shiftId,route});
   emit({pending:queue.length,route});
-  if(queue.length>=25)flush();
+  if(queue.length>=25||Date.now()-lastFlush>=FLUSH_MS)flush();
 }
 
 // Android throttles network requests made by the WebView after a few minutes in the background, so the app
@@ -40,7 +40,7 @@ async function push(shift:string,points:Fix[]):Promise<{data:any}>{
   if(isNativeApp()){
     const {CapacitorHttp}=await import('@capacitor/core');
     const {data:{session}}=await db().auth.getSession();if(!session)throw Error('Not signed in');
-    const r=await CapacitorHttp.post({url:import.meta.env.VITE_SUPABASE_URL+'/rest/v1/rpc/rep_push_locations',headers:{'Content-Type':'application/json',apikey:import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,Authorization:'Bearer '+session.access_token},data:{shift,points}});
+    const r=await CapacitorHttp.post({connectTimeout:15000,readTimeout:30000,url:import.meta.env.VITE_SUPABASE_URL+'/rest/v1/rpc/rep_push_locations',headers:{'Content-Type':'application/json',apikey:import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,Authorization:'Bearer '+session.access_token},data:{shift,points}});
     if(r.status>=300)throw Error(typeof r.data==='object'?r.data?.message||JSON.stringify(r.data):String(r.data));
     return {data:typeof r.data==='string'?JSON.parse(r.data):r.data};
   }
@@ -48,9 +48,11 @@ async function push(shift:string,points:Fix[]):Promise<{data:any}>{
 }
 
 export async function flush(){
-  if(flushing||!shiftId)return;const queue=read<Fix[]>(QUEUE_KEY,[]);if(!queue.length){emit({pending:0});return}
+  // A request that never returned (lost connection in the background) must not block uploads forever.
+  if(flushing&&Date.now()-flushStarted>60000)flushing=false;
+  if(flushing||!shiftId)return;lastFlush=Date.now();const queue=read<Fix[]>(QUEUE_KEY,[]);if(!queue.length){emit({pending:0});return}
   if(typeof navigator!=='undefined'&&navigator.onLine===false){emit({syncError:'offline'});return}
-  flushing=true;
+  flushing=true;flushStarted=Date.now();
   try{
     while(true){
       const all=read<Fix[]>(QUEUE_KEY,[]);if(!all.length)break;
