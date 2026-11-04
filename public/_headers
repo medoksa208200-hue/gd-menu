@@ -7,7 +7,7 @@
   Cross-Origin-Opener-Policy: same-origin
   Cross-Origin-Resource-Policy: same-origin
   X-Permitted-Cross-Domain-Policies: none
-  Permissions-Policy: camera=(self), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()
+  Permissions-Policy: camera=(self), microphone=(), geolocation=(self), payment=(), usb=(), interest-cohort=()
   X-Robots-Tag: noindex, nofollow, noarchive, nosnippet, noimageindex
 
 /assets/*
@@ -18,3 +18,11 @@
 
 /images/*
   Cache-Control: public, max-age=2592000, stale-while-revalidate=86400
+
+/rep-sw.js
+  Cache-Control: no-cache
+  Service-Worker-Allowed: /rep
+
+/downloads/*
+  Cache-Control: no-cache
+  Content-Type: application/vnd.android.package-archive

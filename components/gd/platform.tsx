@@ -5,6 +5,9 @@ import PublicSite from './public-site';
 import {Toaster,toast} from 'sonner';
 // The staff workspace (charts, Excel, QR, forms) is a separate chunk that public visitors never download.
 const Admin=lazy(()=>import('./admin'));
+// The rep phone app is its own chunk too; the Android app always opens it.
+const RepApp=lazy(()=>import('./rep-app'));
+if((window as any).Capacitor?.isNativePlatform?.()&&!location.pathname.startsWith('/rep'))history.replaceState(null,'','/rep');
 export const UI=createContext<any>(null);
 export const useUI=()=>useContext(UI);
 export default function Platform(){
@@ -21,5 +24,5 @@ export default function Platform(){
  const toggleTheme=()=>setThemeState(old=>{const next=old==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',next);try{localStorage.setItem('gd-theme',next)}catch{}document.querySelector('meta[name=theme-color]')?.setAttribute('content',next==='dark'?'#0e0e10':'#ED0715');return next});
  const Link=({href,children,...props}:any)=><a href={href} {...props} onClick={(e:any)=>{props.onClick?.(e);if(!e.defaultPrevented&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey&&e.button===0&&!props.target){e.preventDefault();go(href)}}}>{children}</a>;
  const fallback=<div className="center-state"><span className="spinner"/></div>;
- return <UI.Provider value={{lang,setLang,path,go,t,Link,comparison,toggleCompare,version,refresh,theme,toggleTheme}}><Toaster richColors theme={theme as any} position="top-center" dir={lang==='ar'?'rtl':'ltr'} toastOptions={{style:{fontFamily:'inherit'}}}/>{error?<main className="center-state"><h1>{t('تعذّر تحميل الصفحة','Unable to load the page')}</h1><p>{t('تحقق من اتصال الإنترنت ثم حاول مرة أخرى.','Check your connection and try again.')}</p><button className="btn btn-dark" onClick={()=>location.reload()}>{t('إعادة المحاولة','Try again')}</button></main>:!ready?<div className="center-state"><img width="100" height="99" src="/brand/gd-logo.webp" alt={t('جي دي','GD')}/><span className="spinner"/></div>:path.startsWith('/admin')?<Suspense fallback={fallback}><Admin/></Suspense>:<PublicSite/>}</UI.Provider>
+ return <UI.Provider value={{lang,setLang,path,go,t,Link,comparison,toggleCompare,version,refresh,theme,toggleTheme}}><Toaster richColors theme={theme as any} position="top-center" dir={lang==='ar'?'rtl':'ltr'} toastOptions={{style:{fontFamily:'inherit'}}}/>{error?<main className="center-state"><h1>{t('تعذّر تحميل الصفحة','Unable to load the page')}</h1><p>{t('تحقق من اتصال الإنترنت ثم حاول مرة أخرى.','Check your connection and try again.')}</p><button className="btn btn-dark" onClick={()=>location.reload()}>{t('إعادة المحاولة','Try again')}</button></main>:!ready?<div className="center-state"><img width="100" height="99" src="/brand/gd-logo.webp" alt={t('جي دي','GD')}/><span className="spinner"/></div>:path.startsWith('/admin')?<Suspense fallback={fallback}><Admin/></Suspense>:path==='/rep'||path.startsWith('/rep/')?<Suspense fallback={fallback}><RepApp/></Suspense>:<PublicSite/>}</UI.Provider>
 }

@@ -25,7 +25,7 @@ Deno.serve(async(req:Request)=>{
   return reply({success:true});
  }
  const {username,password,display_name,role}=body;
- if(typeof username!=='string'||!/^[a-z0-9][a-z0-9._-]{2,39}$/.test(username)||!validPassword(password)||typeof display_name!=='string'||!display_name.trim()||display_name.length>150||!['admin','supervisor','viewer'].includes(role))return reply({error:'Invalid account fields. Username: 3–40 lowercase letters, numbers, dot, underscore or dash. Password: 8–128 characters with uppercase, lowercase, a number and a special character.'},400);
+ if(typeof username!=='string'||!/^[a-z0-9][a-z0-9._-]{2,39}$/.test(username)||!validPassword(password)||typeof display_name!=='string'||!display_name.trim()||display_name.length>150||!['admin','supervisor','viewer','rep'].includes(role))return reply({error:'Invalid account fields. Username: 3–40 lowercase letters, numbers, dot, underscore or dash. Password: 8–128 characters with uppercase, lowercase, a number and a special character.'},400);
  // A synthetic internal Auth identifier is never mailed or shown to staff.
  const created=await server.auth.admin.createUser({email:staffIdentity(username,Deno.env.get('SUPABASE_URL')!),password,email_confirm:true});
  if(created.error)return reply({error:created.error.message},400);

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">GD مندوب</string>
+    <string name="title_activity_main">GD مندوب</string>
+    <string name="package_name">com.gdtableware.rep</string>
+    <string name="custom_url_scheme">com.gdtableware.rep</string>
+</resources>

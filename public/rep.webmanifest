@@ -1,0 +1,19 @@
+{
+  "name": "GD — تطبيق المندوب",
+  "short_name": "GD مندوب",
+  "description": "تتبع خط السير وتسجيل السولار والمصروفات لمناديب جي دي",
+  "id": "/rep",
+  "start_url": "/rep",
+  "scope": "/rep",
+  "display": "standalone",
+  "orientation": "portrait",
+  "lang": "ar",
+  "dir": "rtl",
+  "background_color": "#ffffff",
+  "theme_color": "#e30613",
+  "icons": [
+    {"src": "/rep-icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "/rep-icons/icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "/rep-icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

@@ -63,6 +63,31 @@ and the site is excluded from search engines (`robots.txt`, `noindex` meta and `
   consumption charts, and alerts for high consumption, odometer errors, unlogged distance, repeated part
   replacements and overdue oil changes.
 
+**Rep tracking (`/admin/tracking`) and the rep app (`/rep`, Android app).**
+- Reps are staff accounts with the **Sales rep** role (Staff page). They sign in to the rep app, start the day by
+  choosing a vehicle (or "no vehicle") with an odometer reading and photo, and end it with the odometer again.
+- During a shift the phone records a GPS point when the rep moves 20 m or every two minutes, queues points on the
+  phone and uploads them in batches (nothing is lost without a connection). The Android app (`android/`, built with
+  Capacitor and `@capacitor-community/background-geolocation`) keeps recording with the screen off through a
+  foreground service; the browser/installed web app records while it is on screen.
+- Fuel fills and expenses logged from the phone go into the same fleet tables, in the rep's name.
+- Managers see: live positions; every shift with GPS km vs odometer km (a large gap is flagged), new areas, stops of
+  5+ minutes, fuel and expenses; each route drawn with known streets in blue and first-time streets in orange; and a
+  coverage map of 150 m cells coloured by rep, by visit frequency, or new-in-period, with area per rep.
+- Database: `rep_shifts`, `rep_locations`, `rep_cells` (migration `20261104100000_rep_tracking.sql`); reps write only
+  through `rep_*` functions that act on their own shift. Tests: `scripts/tracking.test.mjs`.
+
+### Building the Android app
+
+```bash
+pnpm build                       # needs the two VITE_ variables
+npx cap sync android
+cd android && ./gradlew assembleDebug   # needs the Android SDK (ANDROID_HOME) and JDK 21
+cp app/build/outputs/apk/debug/app-debug.apk ../public/downloads/gd-rep.apk
+```
+
+The APK is published with the site at `/downloads/gd-rep.apk`; the rep app links to it.
+
 ## Supabase deployment
 
 The timestamped migrations in `supabase/migrations` are applied in order to
