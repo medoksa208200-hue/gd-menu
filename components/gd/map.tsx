@@ -7,16 +7,18 @@ import 'leaflet/dist/leaflet.css';
 
 export const CELL_LAT=0.00135,CELL_LNG=0.00155;
 export const cellBounds=(x:number,y:number):[[number,number],[number,number]]=>[[y*CELL_LAT,x*CELL_LNG],[(y+1)*CELL_LAT,(x+1)*CELL_LNG]];
-// Distinct, readable rep colours (light and dark map alike).
-export const REP_COLORS=['#e30613','#1d4ed8','#127a3e','#9333ea','#ea580c','#0891b2','#be185d','#4d7c0f','#7c3aed','#b45309','#0f766e','#475569'];
+// Strong, distinct rep colours that stand out on the muted base map (no pinks or light reds, which look like roads).
+export const REP_COLORS=['#2563eb','#dc2626','#16a34a','#9333ea','#ea580c','#0891b2','#c026d3','#65a30d','#4f46e5','#b45309','#0d9488','#1f2937'];
+// A route line with a white casing under it, so it reads clearly over any street, at any zoom.
+export function routeLine(g:L.LayerGroup,pts:L.LatLngExpression[],color:string,weight=5){if(pts.length<2)return;L.polyline(pts,{color:'#fff',weight:weight+4,opacity:.95,lineCap:'round',lineJoin:'round',interactive:false}).addTo(g);L.polyline(pts,{color,weight,opacity:1,lineCap:'round',lineJoin:'round'}).addTo(g)}
 const CAIRO:[number,number]=[30.0444,31.2357];
 
-export function MapView({draw,deps,height=420,fitKey,className}:{draw:(layer:L.LayerGroup,map:L.Map)=>L.LatLngBoundsExpression|null|void,deps:any[],height?:number|string,fitKey?:any,className?:string}){
+export function MapView({draw,deps,height=420,fitKey,className,onReady}:{draw:(layer:L.LayerGroup,map:L.Map)=>L.LatLngBoundsExpression|null|void,deps:any[],height?:number|string,fitKey?:any,className?:string,onReady?:(map:L.Map)=>void}){
   const ref=useRef<HTMLDivElement>(null),map=useRef<L.Map|null>(null),layer=useRef<L.LayerGroup|null>(null),fitted=useRef<any>(undefined);
   useEffect(()=>{
     const m=L.map(ref.current!,{zoomControl:true,attributionControl:true,preferCanvas:true}).setView(CAIRO,11);
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(m);
-    layer.current=L.layerGroup().addTo(m);map.current=m;
+    layer.current=L.layerGroup().addTo(m);map.current=m;onReady?.(m);
     const resize=new ResizeObserver(()=>m.invalidateSize());resize.observe(ref.current!);
     return()=>{resize.disconnect();m.remove();map.current=null}
   },[]);

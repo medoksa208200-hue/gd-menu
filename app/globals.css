@@ -11,7 +11,7 @@
   --sh-1:0 1px 2px rgba(16,16,20,.05),0 1px 1px rgba(16,16,20,.03);
   --sh-2:0 8px 24px -10px rgba(16,16,20,.16),0 2px 6px rgba(16,16,20,.04);
   --sh-3:0 24px 60px -20px rgba(16,16,20,.28);
-  --font:'Cairo',system-ui,-apple-system,'Segoe UI',Tahoma,sans-serif;
+  --font:'IBM Plex Sans Arabic',system-ui,-apple-system,'Segoe UI',Tahoma,sans-serif;
   --ease:cubic-bezier(.2,.7,.2,1);
 }
 :root{--bg:#fff;--surface:#fff;--contrast:#0d0d0f;--on-contrast:#fff;--header-bg:rgba(255,255,255,.88);--topbar-bg:rgba(246,245,242,.86);--float-bg:rgba(255,255,255,.92);color-scheme:light}
@@ -943,3 +943,125 @@ tr.muted td{opacity:.6}
 .rep-update p{margin:0}
 .rep-update-notes{white-space:pre-line;font-size:13.5px;color:var(--ink-2);background:var(--soft);padding:8px 10px;border-radius:var(--r-sm)}
 .modal.rep-update{max-width:420px;padding:20px}
+
+/* Rep app: behave like an installed app, not a web page. */
+.rep-mode,.rep-mode body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;touch-action:manipulation}
+.rep-mode body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.rep-mode input,.rep-mode textarea,.rep-mode select{-webkit-user-select:text;user-select:text;font-size:16px}
+.rep-mode img{-webkit-user-drag:none}
+.rep-app{padding-top:env(safe-area-inset-top);padding-bottom:calc(40px + env(safe-area-inset-bottom))}
+.rep-ask .modal{max-width:380px;padding:22px}
+.rep-ask p{margin:0 0 6px;font-size:16px;font-weight:600;line-height:1.7}
+.rep-settings{margin-top:10px}
+.rep-leftover{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:var(--r);background:var(--amber-50);color:var(--amber);font-size:13.5px;font-weight:600}
+
+/* Muted base map: streets turn grey so coloured routes and coverage stand out; labels stay readable. */
+.map-view .leaflet-tile-pane{filter:grayscale(.85) contrast(.92) brightness(1.04)}
+[data-theme=dark] .map-view .leaflet-tile-pane{filter:grayscale(.85) brightness(.7) contrast(1.1)}
+
+/* ═══════════════ Visual system v2 — "operations console" ═══════════════
+   Plain, precise and dense: IBM Plex Sans Arabic, small radii, hairline borders instead of shadows, a dark
+   sidebar, underline tabs, rectangular status badges and KPI tiles with the label above the figure. */
+:root{--r-sm:4px;--r:6px;--r-lg:8px;--r-xl:10px;--sh-1:none;--sh-2:0 1px 2px rgba(16,16,20,.06),0 10px 28px -14px rgba(16,16,20,.22);--sh-3:0 18px 50px -18px rgba(16,16,20,.35);
+  --console:#f3f3f1;--side:#141417;--side-ink:#b9b9c2;--side-line:#26262c}
+:root[data-theme=dark]{--console:#0e0e10;--side:#0a0a0c;--side-line:#1f1f24}
+body{line-height:1.65;font-feature-settings:"kern","tnum"}
+h1,h2,h3{letter-spacing:-.01em}
+
+/* Buttons and controls */
+.btn{border-radius:var(--r);min-height:40px;padding:8px 16px;font-weight:600;font-size:14px;box-shadow:none}
+.btn-sm{min-height:34px;padding:6px 12px}
+.btn-lg{min-height:48px}
+.icon-btn{border-radius:var(--r)}
+.lang-btn{border-radius:var(--r)!important}
+select,textarea,input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]){border-radius:var(--r)}
+input[type=file]::file-selector-button{border-radius:var(--r)}
+.select-wrap select{border-radius:var(--r)}
+.chip{border-radius:var(--r);min-height:34px;padding:5px 12px;font-size:13.5px}
+.pill{border-radius:var(--r-sm);font-size:12px;padding:2px 8px;font-weight:600;letter-spacing:0}
+
+/* Underline tabs instead of floating segmented pills */
+.segmented{background:none;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:0;gap:22px;display:flex;width:100%;max-width:100%}
+.segmented button{border-radius:0;padding:10px 2px;font-size:14px;color:var(--muted);background:none!important;box-shadow:inset 0 -2px 0 transparent;transition:color .15s,box-shadow .15s}
+.segmented button:hover{color:var(--ink)}
+.segmented button.active{color:var(--ink);background:none;box-shadow:inset 0 -2px 0 var(--red)}
+.card .segmented,.tracking-filters .segmented{width:auto;gap:16px}
+
+/* Cards, KPI tiles, tables */
+.card{border-radius:var(--r-lg);box-shadow:none;padding:20px}
+.stat-cards{gap:12px}
+.stat-card{flex-direction:column-reverse;justify-content:flex-end;gap:6px;padding:14px 16px;border-radius:var(--r-lg);border-inline-start:3px solid var(--line-2);box-shadow:none}
+.stat-card:hover{transform:none;box-shadow:none;border-color:var(--line-2)}
+.stat-card .stat-icon{display:none}
+.stat-card b{font-size:26px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.stat-card>span:last-child{font-size:12.5px;font-weight:600;color:var(--muted);line-height:1.5}
+.stat-card.tone-green{border-inline-start-color:var(--green)}.stat-card.tone-amber{border-inline-start-color:var(--amber)}
+.stat-card.tone-blue{border-inline-start-color:var(--blue)}.stat-card.tone-red{border-inline-start-color:var(--red)}.stat-card.tone-gray{border-inline-start-color:var(--subtle)}
+.data-table th{background:var(--soft);font-size:12px;font-weight:600;color:var(--muted);padding:9px 12px;border-bottom:1px solid var(--line)}
+.data-table td{padding:10px 12px;font-variant-numeric:tabular-nums}
+.data-table tbody tr:hover td{background:color-mix(in srgb,var(--soft) 60%,transparent)}
+.table-scroll.card{padding:0;overflow:hidden}
+.page-head{margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.page-head h1{font-size:clamp(21px,2.2vw,26px);font-weight:700}
+.page-head p{font-size:14px;color:var(--muted)}
+.alert{border-radius:var(--r);border-inline-start:3px solid var(--red)}
+.overlay{backdrop-filter:none;background:rgba(10,10,12,.55)}
+.modal{border-radius:var(--r-xl)}
+.empty-icon{border-radius:var(--r-lg)}
+
+/* Workspace shell: dark sidebar, flat top bar */
+.admin-shell{background:var(--console)}
+.admin-sidebar{background:var(--side);border-inline-end:1px solid var(--side-line);color:var(--side-ink);padding:14px 10px}
+.admin-brand,.admin-brand span{color:#fff}
+.admin-brand img{background:#fff;border-radius:var(--r-sm);padding:2px 5px}
+.sidebar-close{color:#fff}
+.nav-group{gap:1px}
+.nav-group a{border-radius:var(--r);padding:9px 12px;font-size:14px!important;font-weight:500;color:var(--side-ink);position:relative}
+.nav-group a:hover{background:rgba(255,255,255,.05);color:#fff}
+.nav-group a.active{background:rgba(255,255,255,.08);color:#fff;font-weight:600}
+.nav-group a.active::before{content:"";position:absolute;inset-block:8px;inset-inline-start:-10px;width:3px;border-radius:0 3px 3px 0;background:var(--red)}
+.sidebar-bottom{border-top-color:var(--side-line)}
+.sidebar-bottom a,.sidebar-bottom button{color:var(--side-ink);font-weight:500;border-radius:var(--r)}
+.sidebar-bottom a:hover,.sidebar-bottom button:hover{background:rgba(255,255,255,.05);color:#fff}
+.admin-topbar{background:var(--surface);backdrop-filter:none;height:58px}
+.topbar-title strong{font-size:15px;font-weight:600}
+.user-chip i{border-radius:var(--r)}
+.admin-content{padding:24px}
+@media (max-width:640px){.admin-content{padding:16px}.overlay{align-items:flex-end}.segmented{gap:16px;overflow-x:auto}}
+
+/* Maps and tracking */
+.map-view{border-radius:var(--r)}
+.tracking-map-card{padding:8px}
+.map-pin span{border-width:2px}
+.map-pin b{border-radius:var(--r-sm);font-weight:600;font-size:11.5px}
+
+/* Rep app */
+.rep-vehicle,.rep-photo,.rep-stats>div,.rep-action,.rep-compare,.rep-leftover,.rep-hint{border-radius:var(--r-lg)}
+.rep-stats b{font-size:24px;font-variant-numeric:tabular-nums}
+.rep-action{font-weight:600}
+
+/* Tracking extras */
+.tracking-export{margin-inline-start:auto}
+.tracking-alerts{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.tracking-alert{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--line);border-inline-start:3px solid var(--amber);border-radius:var(--r);background:var(--surface);text-align:start;font-size:13.5px}
+.tracking-alert.kind-speed{border-inline-start-color:var(--red)}.tracking-alert.kind-signal svg{color:var(--amber)}.tracking-alert.kind-speed svg{color:var(--red)}
+.tracking-alert b{white-space:nowrap}.tracking-alert span{color:var(--muted)}
+.tracking-list li.clickable{cursor:pointer}.tracking-list li.clickable:hover{background:var(--soft)}
+.live-speed{font-style:normal;font-size:11.5px;font-weight:600;color:var(--blue);margin-inline-start:8px}
+.route-player{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-top:10px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r);background:var(--soft)}
+.route-player input[type=range]{flex:1;min-width:160px;accent-color:var(--red)}
+.route-player-time{display:flex;flex-direction:column;line-height:1.2;min-width:70px}.route-player-time small{color:var(--muted)}
+.route-player-rates{display:flex;gap:4px}.route-player-rates .chip{min-height:30px;padding:3px 9px;font-size:12.5px}
+.stat-card b small{font-size:13px;font-weight:600;color:var(--muted)}
+.score-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;margin-bottom:14px}
+.score-card{padding:16px}
+.score-card header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.score-card header i{width:10px;height:10px;border-radius:2px}
+.score-card header b{flex:1;font-size:15.5px}
+.score-rank{display:grid;place-items:center;min-width:26px;height:26px;border-radius:var(--r-sm);background:var(--contrast);color:var(--on-contrast);font-weight:700;font-size:13px}
+.score-bar{height:6px;border-radius:3px;background:var(--soft-2);overflow:hidden;margin-bottom:12px}.score-bar span{display:block;height:100%}
+.score-card dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 16px;margin:0}
+.score-card dt{font-size:12px;color:var(--muted)}.score-card dd{margin:0;font-weight:700;font-variant-numeric:tabular-nums}.score-card dd small{font-weight:500;color:var(--muted)}
+/* v2: the remaining capsule shapes become squared off too (toggle switches and progress tracks stay round). */
+.search-bar,.badge,.tag,.swatch,.code-copy,.detail-tools button,.inline-select select,.img-badge,.flag,.alert-list b,.gallery-count,.filter-btn .count{border-radius:var(--r)}
+.search-bar button,.search-bar .btn{border-radius:var(--r-sm)}
