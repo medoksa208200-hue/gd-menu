@@ -16,6 +16,15 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // Every release must be signed with this same key, or Android refuses to install it over the installed app.
+    signingConfigs {
+        debug {
+            storeFile rootProject.file('keystore/gd-rep-signing.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
