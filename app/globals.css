@@ -943,3 +943,14 @@ tr.muted td{opacity:.6}
 .rep-update p{margin:0}
 .rep-update-notes{white-space:pre-line;font-size:13.5px;color:var(--ink-2);background:var(--soft);padding:8px 10px;border-radius:var(--r-sm)}
 .modal.rep-update{max-width:420px;padding:20px}
+
+/* Rep app: behave like an installed app, not a web page. */
+.rep-mode,.rep-mode body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;touch-action:manipulation}
+.rep-mode body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.rep-mode input,.rep-mode textarea,.rep-mode select{-webkit-user-select:text;user-select:text;font-size:16px}
+.rep-mode img{-webkit-user-drag:none}
+.rep-app{padding-top:env(safe-area-inset-top);padding-bottom:calc(40px + env(safe-area-inset-bottom))}
+.rep-ask .modal{max-width:380px;padding:22px}
+.rep-ask p{margin:0 0 6px;font-size:16px;font-weight:600;line-height:1.7}
+.rep-settings{margin-top:10px}
+.rep-leftover{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:var(--r);background:var(--amber-50);color:var(--amber);font-size:13.5px;font-weight:600}
