@@ -937,3 +937,9 @@ tr.muted td{opacity:.6}
 .rep-blocked{padding:16px;text-align:center}
 .rep-note{margin:-4px 2px 0;line-height:1.6}
 .rep-top .btn-sm{white-space:nowrap}
+.rep-update{display:flex;flex-direction:column;gap:8px;border:1.5px solid var(--red)}
+.rep-update-head{display:flex;align-items:center;gap:8px;color:var(--red)}
+.rep-update-head b{flex:1;font-size:16px;color:var(--ink)}
+.rep-update p{margin:0}
+.rep-update-notes{white-space:pre-line;font-size:13.5px;color:var(--ink-2);background:var(--soft);padding:8px 10px;border-radius:var(--r-sm)}
+.modal.rep-update{max-width:420px;padding:20px}

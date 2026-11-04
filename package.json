@@ -13,7 +13,7 @@
     "preview": "vite preview --config vite.pages.config.ts",
     "typecheck": "tsc --noEmit",
     "test": "node --test scripts/fleet-analytics.test.mjs scripts/schema.test.mjs scripts/tracking.test.mjs scripts/password-policy.test.mjs scripts/http.test.mjs",
-    "build:android": "vite build --config vite.pages.config.ts && rm -rf dist-pages/downloads && cap sync android && cd android && ./gradlew assembleDebug && cp app/build/outputs/apk/debug/app-debug.apk ../public/downloads/gd-rep.apk"
+    "build:android": "node scripts/release-android.mjs"
   },
   "dependencies": {
     "@capacitor-community/background-geolocation": "1.3.1",
