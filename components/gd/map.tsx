@@ -32,3 +32,7 @@ export function MapView({draw,deps,height=420,fitKey,className,onReady}:{draw:(l
 }
 
 export function dot(color:string,label?:string){return L.divIcon({className:'map-pin',html:`<span style="--c:${color}"></span>${label?`<b>${label.replace(/[<>&"]/g,'')}</b>`:''}`,iconSize:[18,18],iconAnchor:[9,9]})}
+
+// Places (factory, warehouses, customers) drawn as a dashed radius and a labelled pin.
+export const PLACE_COLORS:Record<string,string>={factory:'#e30613',warehouse:'#1f2937',customer:'#2563eb',supplier:'#16a34a',other:'#9333ea'};
+export function drawPlaces(g:L.LayerGroup,places:any[]){for(const p of places){if(p.is_active===false)continue;const c=PLACE_COLORS[p.kind]||'#475569';L.circle([p.lat,p.lng],{radius:p.radius_m,color:c,weight:1.5,fillOpacity:.08,dashArray:'4 4',interactive:false}).addTo(g);L.marker([p.lat,p.lng],{icon:L.divIcon({className:'place-pin',html:`<span style="--c:${c}"><i></i><b>${String(p.name).replace(/[<>&"]/g,'')}</b></span>`,iconSize:[14,14],iconAnchor:[7,7]}),interactive:false}).addTo(g)}}
