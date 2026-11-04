@@ -7,7 +7,7 @@ import {Toaster,toast} from 'sonner';
 const Admin=lazy(()=>import('./admin'));
 // The rep phone app is its own chunk too; the Android app always opens it.
 const RepApp=lazy(()=>import('./rep-app'));
-if((window as any).Capacitor?.isNativePlatform?.()&&!location.pathname.startsWith('/rep'))history.replaceState(null,'','/rep');
+if((window as any).Capacitor?.isNativePlatform?.()&&location.pathname==='/')history.replaceState(null,'','/rep');
 export const UI=createContext<any>(null);
 export const useUI=()=>useContext(UI);
 export default function Platform(){
